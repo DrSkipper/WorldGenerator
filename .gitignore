@@ -79,3 +79,11 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# Custom
+
+Assets/UIAttributes/.hg/
+Assets/UIAttributes/.hgignore
+
+.~lock.*
+Webgl/
