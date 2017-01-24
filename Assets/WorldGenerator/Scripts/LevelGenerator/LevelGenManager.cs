@@ -40,7 +40,6 @@ public class LevelGenManager : LevelGenBehavior
                 ((BSPPlusCAGenerator)_generator).CAParams = this.DefaultCAParams;
                 ((BSPPlusCAGenerator)_generator).BSPParams = this.DefaultBSPParams;
                 break;
-
         }
 
         IntegerVector size = input.MapSizes[Random.Range(0, input.MapSizes.Length)];

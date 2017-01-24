@@ -48,8 +48,8 @@ public class LevelGenStarter : LevelGenBehavior
             Debug.Log("level generation complete, json output not enabled");
 
             int[,] grid = this.tileTypeMapToSpriteIndexMap();
-            this.Tiles.GetComponent<TileMapOutlineRenderer>().CreateMapWithGrid(grid);
-            this.Tiles.GetComponent<TileGeometryCreator>().CreateMapWithGrid(grid);
+            //this.Tiles.GetComponent<TileMapOutlineRenderer>().CreateMapWithGrid(grid);
+            //this.Tiles.GetComponent<TileGeometryCreator>().CreateMapWithGrid(grid);
             this.Manager.Cleanup();
         }
     }

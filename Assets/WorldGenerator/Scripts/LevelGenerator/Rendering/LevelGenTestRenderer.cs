@@ -67,7 +67,7 @@ public class LevelGenTestRenderer : LevelGenBehavior
     private int[,] tileTypeMapToSpriteIndexMap()
     {
         LevelGenMap.TileType[,] grid = this.Map.Grid;
-        MapGridSpaceInfo[,] spriteIndices = new MapGridSpaceInfo[this.Map.Width, this.Map.Height];
+        int[,] spriteIndices = new int[this.Map.Width, this.Map.Height];
 
         for (int x = 0; x < this.Map.Width; ++x)
         {
