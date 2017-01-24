@@ -12,8 +12,8 @@ public class WorldGenSpecs : ScriptableObject
     [System.Serializable]
     public struct GenerationParam
     {
-        string Name;
-        float Value;
+        public string Name;
+        public float Value;
 
         /**
          * Valid Parameters
