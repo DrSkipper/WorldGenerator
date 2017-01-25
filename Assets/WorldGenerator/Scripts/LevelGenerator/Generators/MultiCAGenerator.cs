@@ -17,9 +17,9 @@ public class MultiCAGenerator : BaseLevelGenerator
         this.GeneratorName = "Multi CA Generator";
     }
 
-    public override void SetupGeneration()
+    public override void SetupGeneration(LevelGenMap inputMap)
     {
-        base.SetupGeneration();
+        base.SetupGeneration(inputMap);
         _outputs = new List<LevelGenOutput>();
         cleanGenerator();
 
@@ -52,7 +52,7 @@ public class MultiCAGenerator : BaseLevelGenerator
 
         CAGenerator.CAGenerationParams currentParams = this.CaParams[_paramsIndex];
         _caGenerator.ApplyParams(currentParams);
-        _caGenerator.SetupGeneration();
+        _caGenerator.SetupGeneration(this.InputMap);
         this.NextPhase();
     }
 

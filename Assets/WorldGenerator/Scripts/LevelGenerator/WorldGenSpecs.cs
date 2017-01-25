@@ -2,11 +2,13 @@
 
 public class WorldGenSpecs : ScriptableObject
 {
-    public enum GenerationType
+    [System.Serializable]
+    public enum GenerationStageType
     {
         CA,
         BSP,
-        Room
+        Room,
+        Fill
     }
 
     [System.Serializable]
@@ -50,7 +52,7 @@ public class WorldGenSpecs : ScriptableObject
     {
         public Vector2 StartInParent;
         public Vector2 EndInParent;
-        public GenerationType Type;
+        public GenerationStageType Type;
         public LevelGenMap.TileType ValidInputTiles;
         public LevelGenMap.TileType OutputTileType;
         public GenerationParam[] Parameters;

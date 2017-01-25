@@ -47,10 +47,10 @@ public class CAGenerator : BaseLevelGenerator
         this.MaxCaves = generationParams.MaxCaves;
     }
 
-	public override void SetupGeneration()
-	{
-		base.SetupGeneration();
-		this.AddPhase(this.InitialPhase);
+    public override void SetupGeneration(LevelGenMap inputMap)
+    {
+        base.SetupGeneration(inputMap);
+        this.AddPhase(this.InitialPhase);
 		this.AddPhase(this.AutomataPhase);
 		if (this.MaxCaves >= 0)
 			this.AddPhase(this.FillCavesPhase);

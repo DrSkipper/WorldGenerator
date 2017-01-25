@@ -49,9 +49,9 @@ public class BSPGenerator : BaseLevelGenerator
         this.VisualizeSplitting = generationParams.VisualizeSplitting;
 	}
 
-	public override void SetupGeneration()
+	public override void SetupGeneration(LevelGenMap inputMap)
 	{
-		base.SetupGeneration();
+		base.SetupGeneration(inputMap);
         _root = createNode(this.Bounds);
         _nodeQueue = new List<BSPNode>();
 		_nodeList = new List<BSPNode>();

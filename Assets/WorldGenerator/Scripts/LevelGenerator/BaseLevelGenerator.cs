@@ -10,6 +10,7 @@ public class BaseLevelGenerator : LevelGenBehavior
     public Rect Bounds;
     public LevelGenMap.TileType OpenTileType = LevelGenMap.TileType.B;
 
+    public LevelGenMap InputMap { get { return _inputMap; } }
     public LevelGenPhase CurrentPhase { get { return _phases[_currentPhase]; } }
 	public bool IsFinished { get { return _currentPhase >= _phases.Count; } }
 
@@ -27,10 +28,11 @@ public class BaseLevelGenerator : LevelGenBehavior
 	/**
 	 * Virtual
 	 */
-	public virtual void SetupGeneration()
+	public virtual void SetupGeneration(LevelGenMap inputMap)
 	{
 		_phases = null;
 		_currentPhase = 0;
+        _inputMap = inputMap;
 	}
 
 	/**
@@ -38,7 +40,7 @@ public class BaseLevelGenerator : LevelGenBehavior
 	 */
 	public void GenerateEntireMap()
 	{
-		this.SetupGeneration();
+		this.SetupGeneration(this.Map);
 
 		while (!this.IsFinished)
 		{
@@ -77,4 +79,5 @@ public class BaseLevelGenerator : LevelGenBehavior
 	 */
 	private int _currentPhase;
 	private List<LevelGenPhase> _phases;
+    private LevelGenMap _inputMap;
 }

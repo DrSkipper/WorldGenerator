@@ -35,11 +35,6 @@ public class LevelGenManager : LevelGenBehavior
                 _generator = this.gameObject.AddComponent<RoomGenerator>();
                 ((RoomGenerator)_generator).NumberOfRooms = Random.Range(input.NumRoomsRange.X, input.NumRoomsRange.Y + 1);
                 break;
-            case LevelGenInput.GenerationType.CABSPCombo:
-                _generator = this.gameObject.AddComponent<BSPPlusCAGenerator>();
-                ((BSPPlusCAGenerator)_generator).CAParams = this.DefaultCAParams;
-                ((BSPPlusCAGenerator)_generator).BSPParams = this.DefaultBSPParams;
-                break;
         }
 
         IntegerVector size = input.MapSizes[Random.Range(0, input.MapSizes.Length)];
@@ -48,7 +43,7 @@ public class LevelGenManager : LevelGenBehavior
         this.Map.Height = size.Y;
         this.Map.FillCompletely(LevelGenMap.TileType.A);
         _generator.Bounds = new Rect(this.Border, this.Border, this.Map.Width - this.Border * 2, this.Map.Height - this.Border * 2);
-		_generator.SetupGeneration();
+		_generator.SetupGeneration(this.Map);
 
         if (_updateDelegates != null)
         {
@@ -65,7 +60,7 @@ public class LevelGenManager : LevelGenBehavior
 		_generatorRemainsWhenDone = true;
 		_generator = generator;
 		this.Map.FillCompletely(LevelGenMap.TileType.A);
-		_generator.SetupGeneration();
+		_generator.SetupGeneration(this.Map);
 
         if (_updateDelegates != null)
         {

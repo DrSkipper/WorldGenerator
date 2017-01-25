@@ -87,9 +87,9 @@ public class LevelGenTestRenderer : LevelGenBehavior
         {
             default:
             case LevelGenMap.TileType.A:
-                return 1;
-            case LevelGenMap.TileType.B:
                 return 0;
+            case LevelGenMap.TileType.B:
+                return 1;
             case LevelGenMap.TileType.C:
                 return 2;
             case LevelGenMap.TileType.D:

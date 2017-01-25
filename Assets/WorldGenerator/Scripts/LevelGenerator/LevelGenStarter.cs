@@ -47,7 +47,7 @@ public class LevelGenStarter : LevelGenBehavior
             Debug.Log("json of level gen output:\n" + json);*/
             Debug.Log("level generation complete, json output not enabled");
 
-            int[,] grid = this.tileTypeMapToSpriteIndexMap();
+            //int[,] grid = this.tileTypeMapToSpriteIndexMap();
             //this.Tiles.GetComponent<TileMapOutlineRenderer>().CreateMapWithGrid(grid);
             //this.Tiles.GetComponent<TileGeometryCreator>().CreateMapWithGrid(grid);
             this.Manager.Cleanup();
@@ -82,9 +82,9 @@ public class LevelGenStarter : LevelGenBehavior
         {
             default:
             case LevelGenMap.TileType.A:
-                return 1;
-            case LevelGenMap.TileType.B:
                 return 0;
+            case LevelGenMap.TileType.B:
+                return 1;
             case LevelGenMap.TileType.C:
                 return 2;
             case LevelGenMap.TileType.D:

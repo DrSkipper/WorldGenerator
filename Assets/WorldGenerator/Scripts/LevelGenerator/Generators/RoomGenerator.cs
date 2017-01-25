@@ -36,10 +36,10 @@ public class RoomGenerator : BaseLevelGenerator
         this.Rooms = new List<Rect>();
     }
 
-	public override void SetupGeneration()
-	{
-		base.SetupGeneration();
-		this.Rooms.Clear();
+    public override void SetupGeneration(LevelGenMap inputMap)
+    {
+        base.SetupGeneration(inputMap);
+        this.Rooms.Clear();
 		_retries = 0;
         _corridorTiles = new List<List<LevelGenMap.Coordinate>>();
         this.AddPhase(this.AddRoomsPhase);
