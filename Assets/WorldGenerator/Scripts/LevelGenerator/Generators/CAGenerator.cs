@@ -28,8 +28,8 @@ public class CAGenerator : BaseLevelGenerator
 	public int MaxCaves = -1;
 
 	// To be used during generation, once generation is done we align with correct map types
-	private const LevelGenMap.TileType BASE_TYPE = LevelGenMap.TileType.A; // "alive"
-	private const LevelGenMap.TileType CAVE_TYPE = LevelGenMap.TileType.B; // "dead"
+	private const LevelGenMap.TileType BASE_TYPE = LevelGenMap.TileType.INTERNAL_A; // "alive"
+	private const LevelGenMap.TileType CAVE_TYPE = LevelGenMap.TileType.INTERNAL_B; // "dead"
 
 	public void Reset()
 	{
@@ -52,8 +52,7 @@ public class CAGenerator : BaseLevelGenerator
         base.SetupGeneration(inputMap, outputMap, bounds);
         this.AddPhase(this.InitialPhase);
 		this.AddPhase(this.AutomataPhase);
-		if (this.MaxCaves >= 0)
-			this.AddPhase(this.FillCavesPhase);
+		this.AddPhase(this.FillCavesPhase);
 		this.AddPhase(this.ApplyCorrectTileTypes);
 	}
 
@@ -64,8 +63,8 @@ public class CAGenerator : BaseLevelGenerator
 	{
 		_originalMap = this.OutputMap.CopyOfGridRect(this.Bounds);
         _inputMap = this.InputMap.CopyOfGridRect(this.Bounds);
-        this.OutputMap.FillMatchingTilesInRect(this.Bounds, CAVE_TYPE, this.ValidBaseTilesForGeneration, this.InputMap);
-        this.OutputMap.FillMatchingTilesWithChance(this.Bounds, BASE_TYPE, this.ValidBaseTilesForGeneration, this.InitialChance, this.InputMap);
+        this.OutputMap.FillMatchingTilesInRect(this.Bounds, BASE_TYPE, this.ValidBaseTilesForGeneration, this.InputMap);
+        this.OutputMap.FillMatchingTilesWithChance(this.Bounds, CAVE_TYPE, BASE_TYPE, this.InitialChance, this.InputMap);
 		this.NextPhase();
 	}
 
@@ -102,7 +101,7 @@ public class CAGenerator : BaseLevelGenerator
         }
 
         // If there are too many caves, only keep the largest ones
-        if (caves.Count > this.MaxCaves)
+        if (this.MaxCaves >= 0 && caves.Count > this.MaxCaves)
         {
             caves.Sort(
                 delegate(List<LevelGenMap.Coordinate> cave1, List<LevelGenMap.Coordinate> cave2)
@@ -218,7 +217,7 @@ public class CAGenerator : BaseLevelGenerator
 					++count;
 
 				// Otherwise, a normal check of the neighbour
-				else if (map[neighbour_x, neighbour_y] == BASE_TYPE)
+				else if (map[neighbour_x, neighbour_y] != CAVE_TYPE)
 					++count;
 			}
 		}

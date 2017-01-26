@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 
 public class LevelGenMap : MonoBehaviour
@@ -15,6 +14,10 @@ public class LevelGenMap : MonoBehaviour
         D = 0x000010,
         E = 0x000020,
         F = 0x000040,
+        G = 0x000080,
+        H = 0x000100,
+        INTERNAL_A = 0x000200,
+        INTERNAL_B = 0x000400,
         MASK_ALL = 0xFFFFFF,
         MASK_NONE = 0x000000
     }

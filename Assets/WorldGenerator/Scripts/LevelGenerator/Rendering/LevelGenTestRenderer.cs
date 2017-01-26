@@ -92,6 +92,14 @@ public class LevelGenTestRenderer : MonoBehaviour
                 return 4;
             case LevelGenMap.TileType.F:
                 return 5;
+            case LevelGenMap.TileType.G:
+                return 6;
+            case LevelGenMap.TileType.H:
+                return 7;
+            case LevelGenMap.TileType.INTERNAL_A:
+                return 8;
+            case LevelGenMap.TileType.INTERNAL_B:
+                return 9;
         }
     }
 }
