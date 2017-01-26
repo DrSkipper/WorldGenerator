@@ -170,6 +170,8 @@ public class WorldGenManager : MonoBehaviour
                 }
                 this.CAGenerator.ApplyParams(caParams);
                 this.CAGenerator.SetupGeneration(_layers[inputLayer], _layers[_currentLayer], bounds);
+                this.CAGenerator.ValidBaseTilesForGeneration = stage.ValidInputTiles;
+                this.CAGenerator.FillTileType = stage.OutputTileType;
                 _generator = this.CAGenerator;
                 break;
             case WorldGenSpecs.GenerationStageType.BSP:
@@ -201,7 +203,9 @@ public class WorldGenManager : MonoBehaviour
                 }
                 this.BSPGenerator.ApplyParams(bspParams);
                 this.BSPGenerator.SetupGeneration(_layers[inputLayer], _layers[_currentLayer], bounds);
+                this.BSPGenerator.FillTileType = stage.OutputTileType;
                 _generator = this.BSPGenerator;
+                //TODO: Have BSPGen recognize ValidBaseTiles
                 break;
             case WorldGenSpecs.GenerationStageType.Room:
                 RoomGenerator.RoomGenerationParams roomParams = this.DefaultRoomParams;
@@ -226,7 +230,9 @@ public class WorldGenManager : MonoBehaviour
                 }
                 this.RoomGenerator.ApplyParams(roomParams);
                 this.RoomGenerator.SetupGeneration(_layers[inputLayer], _layers[_currentLayer], bounds);
+                this.RoomGenerator.FillTileType = stage.OutputTileType;
                 _generator = this.RoomGenerator;
+                //TODO: Have RoomGen recognize ValidBaseTiles
                 break;
             case WorldGenSpecs.GenerationStageType.Fill:
                 for (int i = 0; i < stage.Parameters.Length; ++i)
