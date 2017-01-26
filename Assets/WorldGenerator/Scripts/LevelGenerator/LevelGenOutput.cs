@@ -41,7 +41,7 @@ public class LevelGenMapInfo
 public class LevelGenRoomInfo : LevelGenMapInfo
 {
     public const string KEY = "rooms";
-    public LevelGenRoomInfo(List<SimpleRect> rooms)
+    public LevelGenRoomInfo(List<IntegerRect> rooms)
     {
         this.Name = KEY;
         this.Data = rooms;

@@ -1,20 +1,17 @@
 ﻿using UnityEngine;
-using System;
-using System.Collections;
 using System.Collections.Generic;
 
-public class LevelGenTestRenderer : LevelGenBehavior
+public class LevelGenTestRenderer : MonoBehaviour
 {
     public GameObject Tiles;
+    public LevelGenMap Map;
 
     void Awake()
     {
-        this.Manager.AddUpdateDelegate(this.MapWasUpdated);
         _tileMapRender = this.Tiles.GetComponent<TileRenderer>();
-        //_tileMapOutlineRender = this.Tiles.GetComponent<TileMapOutlineRenderer>();
     }
 
-    public void MapWasUpdated()
+    public void MapWasUpdated(bool finished)
     {
         if (this.Tiles == null)
             return;
@@ -49,11 +46,9 @@ public class LevelGenTestRenderer : LevelGenBehavior
             _tileMapRender.SetSpriteIndicesForTiles(changedX.ToArray(), changedY.ToArray(), spriteIndices.ToArray());
         }
 
-        if (this.Manager.Finished)
+        if (finished)
         {
             _oldTileMap = null;
-            //_tileMapRender.Clear();
-            //_tileMapOutlineRender.CreateMapWithGrid(newTileMap);
         }
     }
 
@@ -62,7 +57,6 @@ public class LevelGenTestRenderer : LevelGenBehavior
      */
     private int[,] _oldTileMap;
     private TileRenderer _tileMapRender;
-    //private TileMapOutlineRenderer _tileMapOutlineRender;
 
     private int[,] tileTypeMapToSpriteIndexMap()
     {

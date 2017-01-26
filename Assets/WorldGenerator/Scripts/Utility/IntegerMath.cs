@@ -42,6 +42,19 @@ public struct IntegerRect
         this.Size = size;
     }
 
+    public static IntegerRect ConstructRectFromMinAndSize(IntegerVector min, IntegerVector size)
+    {
+        IntegerRect rect = new IntegerRect();
+        rect.Center = min + size / 2;
+        rect.Size = size;
+        return rect;
+    }
+
+    public static IntegerRect ConstructRectFromMinAndSize(int minX, int minY, int sizeX, int sizeY)
+    {
+        return ConstructRectFromMinAndSize(new IntegerVector(minX, minY), new IntegerVector(sizeX, sizeY));
+    }
+
     public bool Overlaps(IntegerRect other)
     {
         IntegerVector selfMin = this.Min;
@@ -105,6 +118,21 @@ public struct IntegerVector
     }
 
     public static IntegerVector Zero { get { return new IntegerVector(); } }
+
+    public static IntegerVector Min(IntegerVector v1, IntegerVector v2)
+    {
+        return new IntegerVector(v1.X < v2.X ? v1.X : v2.X, v1.Y < v2.Y ? v1.Y : v2.Y);
+    }
+
+    public static IntegerVector Max(IntegerVector v1, IntegerVector v2)
+    {
+        return new IntegerVector(v1.X > v2.X ? v1.X : v2.X, v1.Y > v2.Y ? v1.Y : v2.Y);
+    }
+
+    public static IntegerVector Clamp(IntegerVector v, IntegerVector min, IntegerVector max)
+    {
+        return new IntegerVector(Mathf.Clamp(v.X, min.X, max.X), Mathf.Clamp(v.Y, min.Y, max.Y));
+    }
 
     public static IntegerVector operator +(IntegerVector v1, IntegerVector v2)
     {

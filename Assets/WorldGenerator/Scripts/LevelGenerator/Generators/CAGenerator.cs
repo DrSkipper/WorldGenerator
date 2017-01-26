@@ -47,9 +47,9 @@ public class CAGenerator : BaseLevelGenerator
         this.MaxCaves = generationParams.MaxCaves;
     }
 
-    public override void SetupGeneration(LevelGenMap inputMap)
+    public override void SetupGeneration(LevelGenMap inputMap, LevelGenMap outputMap, IntegerRect bounds)
     {
-        base.SetupGeneration(inputMap);
+        base.SetupGeneration(inputMap, outputMap, bounds);
         this.AddPhase(this.InitialPhase);
 		this.AddPhase(this.AutomataPhase);
 		if (this.MaxCaves >= 0)
@@ -62,9 +62,10 @@ public class CAGenerator : BaseLevelGenerator
 	 */
 	public void InitialPhase(int frames)
 	{
-		_originalMap = this.Map.CopyOfGridRect(new Rect(this.Bounds));
-        this.Map.FillMatchingTilesInRect(this.Bounds, CAVE_TYPE, this.ValidBaseTilesForGeneration);
-        this.Map.FillMatchingTilesWithChance(this.Bounds, BASE_TYPE, this.ValidBaseTilesForGeneration, this.InitialChance);
+		_originalMap = this.OutputMap.CopyOfGridRect(this.Bounds);
+        _inputMap = this.InputMap.CopyOfGridRect(this.Bounds);
+        this.OutputMap.FillMatchingTilesInRect(this.Bounds, CAVE_TYPE, this.ValidBaseTilesForGeneration, this.InputMap);
+        this.OutputMap.FillMatchingTilesWithChance(this.Bounds, BASE_TYPE, this.ValidBaseTilesForGeneration, this.InitialChance, this.InputMap);
 		this.NextPhase();
 	}
 
@@ -82,7 +83,7 @@ public class CAGenerator : BaseLevelGenerator
 
 	public void FillCavesPhase(int frames)
 	{
-        List<LevelGenMap.Coordinate> coords = this.Map.ListOfCoordinatesOfType(this.Bounds, CAVE_TYPE);
+        List<LevelGenMap.Coordinate> coords = this.OutputMap.ListOfCoordinatesOfType(this.Bounds, CAVE_TYPE);
         List<List<LevelGenMap.Coordinate>> caves = new List<List<LevelGenMap.Coordinate>>();
 
         // Gather all the caves
@@ -91,7 +92,7 @@ public class CAGenerator : BaseLevelGenerator
             LevelGenMap.Coordinate coord = coords[coords.Count - 1];
             coords.RemoveAt(coords.Count - 1);
 
-            List<LevelGenMap.Coordinate> cave = this.Map.FloodFill(coord, CAVE_TYPE);
+            List<LevelGenMap.Coordinate> cave = this.OutputMap.FloodFill(coord, CAVE_TYPE);
             foreach (LevelGenMap.Coordinate caveCoord in cave)
             {
                 coords.Remove(caveCoord);
@@ -115,7 +116,7 @@ public class CAGenerator : BaseLevelGenerator
             {
                 foreach (LevelGenMap.Coordinate caveCoord in caves[i])
                 {
-                    this.Map.Grid[caveCoord.x, caveCoord.y] = BASE_TYPE;
+                    this.OutputMap.Grid[caveCoord.x, caveCoord.y] = BASE_TYPE;
                 }
             }
 
@@ -129,17 +130,17 @@ public class CAGenerator : BaseLevelGenerator
 	public void ApplyCorrectTileTypes(int frames)
 	{
 		// Fill the shape of the caves with FillTileType and leave the rest at their original value
-		for (int x = 0; x < this.Bounds.IntWidth(); ++x)
+		for (int x = 0; x < this.Bounds.Size.X; ++x)
 		{
-			for (int y = 0; y < this.Bounds.IntHeight(); ++y)
+			for (int y = 0; y < this.Bounds.Size.Y; ++y)
 			{
-				int globalX = this.Bounds.IntXMin() + x;
-				int globalY = this.Bounds.IntYMin() + y;
+				int globalX = this.Bounds.Min.X + x;
+				int globalY = this.Bounds.Min.Y + y;
 
-				if (this.Map.Grid[globalX, globalY] == BASE_TYPE || (_originalMap[x, y] | this.ValidBaseTilesForGeneration) != this.ValidBaseTilesForGeneration)
-					this.Map.Grid[globalX, globalY] = _originalMap[x, y];
+				if (this.OutputMap.Grid[globalX, globalY] == BASE_TYPE || (_inputMap[x, y] | this.ValidBaseTilesForGeneration) != this.ValidBaseTilesForGeneration)
+					this.OutputMap.Grid[globalX, globalY] = _originalMap[x, y];
 				else
-					this.Map.Grid[globalX, globalY] = this.FillTileType;
+					this.OutputMap.Grid[globalX, globalY] = this.FillTileType;
 			}
 		}
 		this.NextPhase();
@@ -156,29 +157,30 @@ public class CAGenerator : BaseLevelGenerator
 	 * Private
 	 */
     private LevelGenMap.TileType[,] _originalMap;
+    private LevelGenMap.TileType[,] _inputMap;
     List<List<LevelGenMap.Coordinate>> _caves;
 
     private void runAutomata(int finalFrame)
 	{
 		for (int i = this.CurrentPhase.FramesElapsed; i < finalFrame; ++i)
 		{
-            LevelGenMap.TileType[,] newMap = new LevelGenMap.TileType[this.Bounds.IntWidth(), this.Bounds.IntHeight()];
-			doSimulationStep(this.Map.Grid, newMap);
-            this.Map.ApplyGridSubset(this.Bounds.IntXMin(), this.Bounds.IntYMin(), newMap);
+            LevelGenMap.TileType[,] newMap = new LevelGenMap.TileType[this.Bounds.Size.X, this.Bounds.Size.Y];
+			doSimulationStep(this.OutputMap.Grid, newMap);
+            this.OutputMap.ApplyGridSubset(this.Bounds.Min.X, this.Bounds.Min.Y, newMap);
 		}
 	}
 
     private void doSimulationStep(LevelGenMap.TileType[,] prevMap, LevelGenMap.TileType[,] newMap)
 	{
-		for (int x = this.Bounds.IntXMin(); x < this.Bounds.IntXMax(); ++x)
+		for (int x = this.Bounds.Min.X; x < this.Bounds.Max.X; ++x)
 		{
-			for (int y = this.Bounds.IntYMin(); y < this.Bounds.IntYMax(); ++y)
+			for (int y = this.Bounds.Min.Y; y < this.Bounds.Max.Y; ++y)
             {
-                int inBoundsX = x - this.Bounds.IntXMin();
-                int inBoundsY = y - this.Bounds.IntYMin();
+                int inBoundsX = x - this.Bounds.Min.X;
+                int inBoundsY = y - this.Bounds.Min.Y;
 
                 // Make sure this tile matches our valid tile types to run CA on
-                if ((_originalMap[inBoundsX, inBoundsY] | this.ValidBaseTilesForGeneration) != this.ValidBaseTilesForGeneration)
+                if ((_inputMap[inBoundsX, inBoundsY] | this.ValidBaseTilesForGeneration) != this.ValidBaseTilesForGeneration)
                     continue;
 
 				int nbs = countAliveNeighbours(prevMap, x, y);
@@ -212,7 +214,7 @@ public class CAGenerator : BaseLevelGenerator
 					continue; // Do nothing, we don't want to add ourselves in!
 
 				// In case the index we're looking at it off the edge of the map
-				else if (neighbour_x < this.Bounds.IntXMin() || neighbour_y < this.Bounds.IntYMin() || neighbour_x >= this.Bounds.IntXMax() || neighbour_y >= this.Bounds.IntYMax())
+				else if (neighbour_x < this.Bounds.Min.X || neighbour_y < this.Bounds.Min.Y || neighbour_x >= this.Bounds.Max.X || neighbour_y >= this.Bounds.Max.Y)
 					++count;
 
 				// Otherwise, a normal check of the neighbour

@@ -83,44 +83,50 @@ public class LevelGenMap : MonoBehaviour
 
     public void FillCompletely(TileType typeToFill)
     {
-        this.FillRect(new Rect(0.0f, 0.0f, this.Width, this.Height), typeToFill);
+        this.FillRect(IntegerRect.ConstructRectFromMinAndSize(0, 0, this.Width, this.Height), typeToFill);
     }
     
-    public void FillRect(Rect rect, TileType typeToFill)
+    public void FillRect(IntegerRect rect, TileType typeToFill)
     {
         this.FillMatchingTilesInRect(rect, typeToFill, TileType.MASK_ALL);
     }
 
-    public void FillMatchingTilesInRect(Rect rect, TileType typeToFill, TileType match)
+    public void FillMatchingTilesInRect(IntegerRect rect, TileType typeToFill, TileType match, LevelGenMap mapToCheckAgainst = null)
     {
+        if (mapToCheckAgainst == null)
+            mapToCheckAgainst = this;
+
         if (_grid == null)
             _grid = new TileType[this.Width, this.Height];
 
-        for (int x = rect.IntXMin(); x < rect.IntXMax(); ++x)
+        for (int x = rect.Min.X; x < rect.Max.X; ++x)
         {
-            for (int y = rect.IntYMin(); y < rect.IntYMax(); ++y)
+            for (int y = rect.Min.Y; y < rect.Max.Y; ++y)
             {
-                if ((_grid[x, y] | match) == match)
+                if ((mapToCheckAgainst.Grid[x, y] | match) == match)
                     _grid[x, y] = typeToFill;
             }
         }
     }
 
-    public void FillRectWithChance(Rect rect, TileType typeToFill, float chance)
+    public void FillRectWithChance(IntegerRect rect, TileType typeToFill, float chance, LevelGenMap mapToCheckAgainst = null)
     {
-        this.FillMatchingTilesWithChance(rect, typeToFill, TileType.MASK_ALL, chance);
+        this.FillMatchingTilesWithChance(rect, typeToFill, TileType.MASK_ALL, chance, mapToCheckAgainst);
 	}
 
-    public void FillMatchingTilesWithChance(Rect rect, TileType typeToFill, TileType match, float chance)
+    public void FillMatchingTilesWithChance(IntegerRect rect, TileType typeToFill, TileType match, float chance, LevelGenMap mapToCheckAgainst = null)
     {
+        if (mapToCheckAgainst == null)
+            mapToCheckAgainst = this;
+
         if (_grid == null)
             _grid = new TileType[this.Width, this.Height];
 
-        for (int x = rect.IntXMin(); x < rect.IntXMax(); ++x)
+        for (int x = rect.Min.X; x < rect.Max.X; ++x)
         {
-            for (int y = rect.IntYMin(); y < rect.IntYMax(); ++y)
+            for (int y = rect.Min.Y; y < rect.Max.Y; ++y)
             {
-                if ((_grid[x, y] | match) == match && Random.Range(0.0f, 1.0f) <= chance)
+                if ((mapToCheckAgainst.Grid[x, y] | match) == match && Random.Range(0.0f, 1.0f) <= chance)
                     _grid[x, y] = typeToFill;
             }
         }
@@ -137,12 +143,12 @@ public class LevelGenMap : MonoBehaviour
         }
     }
 
-	public List<Coordinate> CoordinatesInRect(Rect rect, bool allowsWrapping = false)
+	public List<Coordinate> CoordinatesInRect(IntegerRect rect, bool allowsWrapping = false)
 	{
 		List<Coordinate> coords = new List<Coordinate>();
-		for (int x = rect.IntXMin(); x < rect.IntXMax(); ++x)
+		for (int x = rect.Min.X; x < rect.Max.X; ++x)
 		{
-			for (int y = rect.IntYMin(); y < rect.IntYMax(); ++y)
+			for (int y = rect.Min.Y; y < rect.Max.Y; ++y)
 			{
 				Coordinate? coord = this.ConstructValidCoordinate(x, y, allowsWrapping);
 				if (coord.HasValue)
@@ -152,14 +158,14 @@ public class LevelGenMap : MonoBehaviour
 		return coords;
 	}
 
-	public LevelGenMap.TileType[,] CopyOfGridRect(Rect rect)
+	public LevelGenMap.TileType[,] CopyOfGridRect(IntegerRect rect)
 	{
-		LevelGenMap.TileType[,] copy = new LevelGenMap.TileType[rect.IntWidth(), rect.IntHeight()];
-		for (int x = rect.IntXMin(); x < rect.IntXMax(); ++x)
+		LevelGenMap.TileType[,] copy = new LevelGenMap.TileType[rect.Size.X, rect.Size.Y];
+		for (int x = rect.Min.X; x < rect.Max.X; ++x)
 		{
-			for (int y = rect.IntYMin(); y < rect.IntYMax(); ++y)
+			for (int y = rect.Min.Y; y < rect.Max.Y; ++y)
 			{
-				copy[x - rect.IntXMin(), y - rect.IntYMin()] = _grid[x, y];
+				copy[x - rect.Min.X, y - rect.Min.Y] = _grid[x, y];
 			}
 		}
 		return copy;
@@ -188,13 +194,13 @@ public class LevelGenMap : MonoBehaviour
         return coords;
     }
 
-    public List<Coordinate> ListOfCoordinatesOfType(Rect rect, TileType type, bool allowWrapping = false)
+    public List<Coordinate> ListOfCoordinatesOfType(IntegerRect rect, TileType type, bool allowWrapping = false)
     {
         List<Coordinate> coords = new List<Coordinate>();
 
-        for (int x = rect.IntXMin(); x < rect.IntXMax(); ++x)
+        for (int x = rect.Min.X; x < rect.Max.X; ++x)
         {
-            for (int y = rect.IntYMin(); y < rect.IntYMax(); ++y)
+            for (int y = rect.Min.Y; y < rect.Max.Y; ++y)
             {
                 if (_grid[x, y] == type)
                 {

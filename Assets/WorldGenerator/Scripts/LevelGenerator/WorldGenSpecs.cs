@@ -50,8 +50,8 @@ public class WorldGenSpecs : ScriptableObject
     [System.Serializable]
     public struct GenerationStage
     {
-        public Vector2 StartInParent;
-        public Vector2 EndInParent;
+        public IntegerVector Min;
+        public IntegerVector Size;
         public GenerationStageType Type;
         public LevelGenMap.TileType ValidInputTiles;
         public LevelGenMap.TileType OutputTileType;

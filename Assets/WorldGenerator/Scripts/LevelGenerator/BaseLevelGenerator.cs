@@ -1,51 +1,42 @@
 ﻿using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
-public class BaseLevelGenerator : LevelGenBehavior
+public class BaseLevelGenerator : MonoBehaviour
 {
 	public string GeneratorName = "Basic Generator";
-    public Rect Bounds;
+    public IntegerRect Bounds;
     public LevelGenMap.TileType OpenTileType = LevelGenMap.TileType.B;
 
+    public LevelGenMap OutputMap { get; private set; }
     public LevelGenMap InputMap { get { return _inputMap; } }
     public LevelGenPhase CurrentPhase { get { return _phases[_currentPhase]; } }
 	public bool IsFinished { get { return _currentPhase >= _phases.Count; } }
 
     public void Start()
     {
-        if (this.Bounds.width == 0.0f || this.Bounds.height == 0.0f)
-        {
-            this.Bounds.x = 0;
-            this.Bounds.y = 0;
-            this.Bounds.width = this.Map.Width;
-            this.Bounds.height = this.Map.Height;
-        }
     }
 
 	/**
 	 * Virtual
 	 */
-	public virtual void SetupGeneration(LevelGenMap inputMap)
+	public virtual void SetupGeneration(LevelGenMap inputMap, LevelGenMap outputMap, IntegerRect bounds)
 	{
 		_phases = null;
 		_currentPhase = 0;
         _inputMap = inputMap;
-	}
+        this.OutputMap = outputMap;
+        this.Bounds = bounds;
+    }
 
 	/**
 	 * Public
 	 */
-	public void GenerateEntireMap()
+	public void GenerateEntireMap(LevelGenMap inputMap, LevelGenMap outputMap, IntegerRect bounds)
 	{
-		this.SetupGeneration(this.Map);
+		this.SetupGeneration(inputMap, outputMap, bounds);
 
 		while (!this.IsFinished)
-		{
 			this.RunGenerationFrames(int.MaxValue);
-		}
 	}
 
 	public void RunGenerationFrames(int frames)
@@ -68,9 +59,9 @@ public class BaseLevelGenerator : LevelGenBehavior
     public virtual LevelGenOutput GetOutput()
     {
         LevelGenOutput output = new LevelGenOutput();
-        output.Grid = this.Map.Grid;
+        output.Grid = this.OutputMap.Grid;
         output.MapInfo = new Dictionary<string, LevelGenMapInfo>();
-        output.OpenTiles = this.Map.ListOfCoordinatesOfType(this.Bounds, this.OpenTileType);
+        output.OpenTiles = this.OutputMap.ListOfCoordinatesOfType(this.Bounds, this.OpenTileType);
         return output;
     }
 

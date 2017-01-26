@@ -42,8 +42,8 @@ public class LevelGenManager : LevelGenBehavior
         this.Map.Width = size.X;
         this.Map.Height = size.Y;
         this.Map.FillCompletely(LevelGenMap.TileType.A);
-        _generator.Bounds = new Rect(this.Border, this.Border, this.Map.Width - this.Border * 2, this.Map.Height - this.Border * 2);
-		_generator.SetupGeneration(this.Map);
+        IntegerRect bounds = IntegerRect.ConstructRectFromMinAndSize(this.Border, this.Border, this.Map.Width - this.Border * 2, this.Map.Height - this.Border * 2);
+		_generator.SetupGeneration(this.Map, this.Map, bounds);
 
         if (_updateDelegates != null)
         {
@@ -60,7 +60,8 @@ public class LevelGenManager : LevelGenBehavior
 		_generatorRemainsWhenDone = true;
 		_generator = generator;
 		this.Map.FillCompletely(LevelGenMap.TileType.A);
-		_generator.SetupGeneration(this.Map);
+        IntegerRect bounds = IntegerRect.ConstructRectFromMinAndSize(this.Border, this.Border, this.Map.Width - this.Border * 2, this.Map.Height - this.Border * 2);
+        _generator.SetupGeneration(this.Map, this.Map, bounds);
 
         if (_updateDelegates != null)
         {

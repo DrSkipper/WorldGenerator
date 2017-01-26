@@ -49,16 +49,16 @@ public class BSPGenerator : BaseLevelGenerator
         this.VisualizeSplitting = generationParams.VisualizeSplitting;
 	}
 
-	public override void SetupGeneration(LevelGenMap inputMap)
-	{
-		base.SetupGeneration(inputMap);
+    public override void SetupGeneration(LevelGenMap inputMap, LevelGenMap outputMap, IntegerRect bounds)
+    {
+        base.SetupGeneration(inputMap, outputMap, bounds);
         _root = createNode(this.Bounds);
         _nodeQueue = new List<BSPNode>();
 		_nodeList = new List<BSPNode>();
 		_leaves = new List<BSPNode>();
 		_nodeQueue.Add(_root);
-        _originalMap = this.Map.CopyOfGridRect(this.Bounds);
-		_rooms = new List<Rect>();
+        _originalMap = this.OutputMap.CopyOfGridRect(this.Bounds);
+		_rooms = new List<IntegerRect>();
 		_corridorTiles = new List<List<LevelGenMap.Coordinate>>();
         _numExtraCorridors = 0;
 
@@ -80,7 +80,7 @@ public class BSPGenerator : BaseLevelGenerator
     public override LevelGenOutput GetOutput()
     {
         LevelGenOutput output = base.GetOutput();
-        output.AddMapInfo(new LevelGenRoomInfo(SimpleRect.RectListToSimpleRectList(_rooms)));
+        output.AddMapInfo(new LevelGenRoomInfo(_rooms));
         output.AddMapInfo(new LevelGenCorridorInfo(_corridorTiles));
         return output;
     }
@@ -226,7 +226,7 @@ public class BSPGenerator : BaseLevelGenerator
 	private List<BSPNode> _nodeList;
 	private List<BSPNode> _leaves;
     private LevelGenMap.TileType[,] _originalMap;
-	private List<Rect> _rooms;
+	private List<IntegerRect> _rooms;
 	private List<List<LevelGenMap.Coordinate>> _corridorTiles;
 	private int _numRoomsToMake;
     private int _numExtraCorridorsToMake;
@@ -234,7 +234,7 @@ public class BSPGenerator : BaseLevelGenerator
 
 	private class BSPNode
 	{
-		public Rect Bounds;
+		public IntegerRect Bounds;
 		public BSPNode[] Children;
         public List<LevelGenMap.Coordinate> CarvedArea;
 
@@ -255,7 +255,7 @@ public class BSPGenerator : BaseLevelGenerator
 		}
 	}
 
-    private BSPNode createNode(Rect bounds)
+    private BSPNode createNode(IntegerRect bounds)
     {
         BSPNode node = new BSPNode();
         node.Bounds = bounds;
@@ -268,17 +268,17 @@ public class BSPGenerator : BaseLevelGenerator
 	{
 		int width = Random.Range(this.RoomMinSize, this.RoomMaxSize + 1);
 		int height = Random.Range(this.RoomMinSize, this.RoomMaxSize + 1);
-		if (width > leaf.Bounds.IntWidth())
-			width = leaf.Bounds.IntWidth();
-		if (height > leaf.Bounds.IntHeight())
-			height = leaf.Bounds.IntHeight();
+		if (width > leaf.Bounds.Size.X)
+			width = leaf.Bounds.Size.X;
+        if (height > leaf.Bounds.Size.Y)
+            height = leaf.Bounds.Size.Y;
 
-		int leftX = Random.Range(leaf.Bounds.IntXMin(), leaf.Bounds.IntXMin() + (leaf.Bounds.IntWidth() - width) + 1);
-		int topY = Random.Range(leaf.Bounds.IntYMin(), leaf.Bounds.IntYMin() + (leaf.Bounds.IntHeight() - height) + 1);
+		int leftX = Random.Range(leaf.Bounds.Min.X, leaf.Bounds.Min.X + (leaf.Bounds.Size.X - width) + 1);
+		int topY = Random.Range(leaf.Bounds.Min.Y, leaf.Bounds.Min.Y + (leaf.Bounds.Size.Y - height) + 1);
 
-		Rect roomRect = new Rect(leftX, topY, width, height);
-		this.Map.FillRect(roomRect, this.FillTileType);
-		leaf.CarvedArea.AddRange(this.Map.CoordinatesInRect(roomRect));
+		IntegerRect roomRect = IntegerRect.ConstructRectFromMinAndSize(leftX, topY, width, height);
+		this.OutputMap.FillRect(roomRect, this.FillTileType);
+		leaf.CarvedArea.AddRange(this.OutputMap.CoordinatesInRect(roomRect));
 		_rooms.Add(roomRect);
 	}
 
@@ -291,18 +291,18 @@ public class BSPGenerator : BaseLevelGenerator
             return;
 
         // Depending on param, only connect nodes at this point if cannot already pathfind between them.
-        if (checkPathFind && this.Map.CanPathBetweenCoordinates(carvedArea1[0], carvedArea2[0]))
+        if (checkPathFind && this.OutputMap.CanPathBetweenCoordinates(carvedArea1[0], carvedArea2[0]))
             return;
 
         carvedArea1.Shuffle();
         carvedArea2.Shuffle();
-		bool leftToRight = node1.Bounds.center.x < node2.Bounds.center.x;
-        bool topToBottom = node1.Bounds.center.y < node2.Bounds.center.y;
+		bool leftToRight = node1.Bounds.Center.X < node2.Bounds.Center.X;
+        bool topToBottom = node1.Bounds.Center.Y < node2.Bounds.Center.Y;
 		LevelGenMap.Coordinate? bestCoord1 = null;
 		LevelGenMap.Coordinate? bestCoord2 = null;
 
         // Greater x distance
-        if (Mathf.Abs(node1.Bounds.center.x - node2.Bounds.center.x) > Mathf.Abs(node1.Bounds.center.y - node2.Bounds.center.y))
+        if (Mathf.Abs(node1.Bounds.Center.X - node2.Bounds.Center.X) > Mathf.Abs(node1.Bounds.Center.Y - node2.Bounds.Center.Y))
         {
             // Check if there is a shared y-coordinate in carved area
             foreach (LevelGenMap.Coordinate coord1 in carvedArea1)
@@ -316,7 +316,7 @@ public class BSPGenerator : BaseLevelGenerator
                         bestCoord1 = coord1;
                     }
                 }
-                else if (coord1.y >= node2.Bounds.IntYMin() && coord1.y < node2.Bounds.IntYMax())
+                else if (coord1.y >= node2.Bounds.Min.Y && coord1.y < node2.Bounds.Max.Y)
                 {
                     foreach (LevelGenMap.Coordinate coord2 in carvedArea2)
                     {
@@ -354,7 +354,7 @@ public class BSPGenerator : BaseLevelGenerator
                         bestCoord1 = coord1;
                     }
                 }
-                else if (coord1.x >= node2.Bounds.IntXMin() && coord1.x < node2.Bounds.IntXMax())
+                else if (coord1.x >= node2.Bounds.Min.X && coord1.x < node2.Bounds.Max.X)
                 {
                     foreach (LevelGenMap.Coordinate coord2 in carvedArea2)
                     {
@@ -414,19 +414,19 @@ public class BSPGenerator : BaseLevelGenerator
 
     private BSPNode[] splitNode(BSPNode parent)
     {
-        bool tooThin = parent.Bounds.width <= this.MinLeafSize * 2;
-        bool tooShort = parent.Bounds.height <= this.MinLeafSize * 2;
+        bool tooThin = parent.Bounds.Size.X <= this.MinLeafSize * 2;
+        bool tooShort = parent.Bounds.Size.Y <= this.MinLeafSize * 2;
 
         if (tooThin && tooShort)
             return null;
 
         // Decide direction split the node
         bool verticalSplit;
-        if (tooShort|| (parent.Bounds.width > parent.Bounds.height && parent.Bounds.height / parent.Bounds.width < this.MinNodeWHRatio))
+        if (tooShort|| (parent.Bounds.Size.X > parent.Bounds.Size.Y && parent.Bounds.Size.Y / parent.Bounds.Size.X < this.MinNodeWHRatio))
         {
             verticalSplit = true;
         }
-        else if (tooThin || (parent.Bounds.height > parent.Bounds.width && parent.Bounds.width / parent.Bounds.height < this.MinNodeWHRatio))
+        else if (tooThin || (parent.Bounds.Size.Y > parent.Bounds.Size.X && parent.Bounds.Size.X / parent.Bounds.Size.Y < this.MinNodeWHRatio))
         {
             verticalSplit = false;
         }
@@ -441,17 +441,17 @@ public class BSPGenerator : BaseLevelGenerator
 
         if (verticalSplit)
         {
-            divider = Random.Range(parent.Bounds.IntXMin() + this.MinLeafSize, parent.Bounds.IntXMax() - 1 - this.MinLeafSize);
+            divider = Random.Range(parent.Bounds.Min.X + this.MinLeafSize, parent.Bounds.Max.X - 1 - this.MinLeafSize);
 
-            nodes[0] = createNode(new Rect(parent.Bounds.xMin, parent.Bounds.yMin, divider - parent.Bounds.IntXMin(), parent.Bounds.height));
-            nodes[1] = createNode(new Rect(nodes[0].Bounds.xMax, nodes[0].Bounds.yMin, parent.Bounds.IntXMax() - nodes[0].Bounds.xMax, parent.Bounds.height));
+            nodes[0] = createNode(IntegerRect.ConstructRectFromMinAndSize(parent.Bounds.Min.X, parent.Bounds.Min.Y, divider - parent.Bounds.Min.X, parent.Bounds.Size.Y));
+            nodes[1] = createNode(IntegerRect.ConstructRectFromMinAndSize(nodes[0].Bounds.Max.X, nodes[0].Bounds.Min.Y, parent.Bounds.Max.X - nodes[0].Bounds.Max.X, parent.Bounds.Size.Y));
         }
         else
         {
-            divider = Random.Range(parent.Bounds.IntYMin() + this.MinLeafSize, parent.Bounds.IntYMax() - 1 - this.MinLeafSize);
+            divider = Random.Range(parent.Bounds.Min.Y + this.MinLeafSize, parent.Bounds.Max.Y - 1 - this.MinLeafSize);
 
-            nodes[0] = createNode(new Rect(parent.Bounds.xMin, parent.Bounds.yMin, parent.Bounds.width, divider - parent.Bounds.IntYMin()));
-            nodes[1] = createNode(new Rect(nodes[0].Bounds.xMin, nodes[0].Bounds.yMax, parent.Bounds.width, parent.Bounds.IntYMax() - nodes[0].Bounds.yMax));
+            nodes[0] = createNode(IntegerRect.ConstructRectFromMinAndSize(parent.Bounds.Min.X, parent.Bounds.Min.Y, parent.Bounds.Size.X, divider - parent.Bounds.Min.Y));
+            nodes[1] = createNode(IntegerRect.ConstructRectFromMinAndSize(nodes[0].Bounds.Min.X, nodes[0].Bounds.Max.Y, parent.Bounds.Size.X, parent.Bounds.Max.Y - nodes[0].Bounds.Max.Y));
         }
         return nodes;
     }
@@ -491,7 +491,7 @@ public class BSPGenerator : BaseLevelGenerator
 
 	private void fillCorridorTile(int x, int y, List<LevelGenMap.Coordinate> cooridor)
 	{
-		LevelGenMap.Coordinate? coord = this.Map.ConstructValidCoordinate(x, y, false);
+		LevelGenMap.Coordinate? coord = this.OutputMap.ConstructValidCoordinate(x, y, false);
 		if (!coord.HasValue)
 			return;
 
@@ -499,7 +499,7 @@ public class BSPGenerator : BaseLevelGenerator
 
 		foreach (BSPNode leaf in _leaves)
 		{
-			if (x >= leaf.Bounds.IntXMin() && x < leaf.Bounds.IntXMax() && y >= leaf.Bounds.IntYMin() && y < leaf.Bounds.IntYMax())
+			if (x >= leaf.Bounds.Min.X && x < leaf.Bounds.Max.X && y >= leaf.Bounds.Min.Y && y < leaf.Bounds.Max.Y)
 			{
                 alreadyContains = leaf.CarvedArea.Contains(coord.Value);
                 if (!alreadyContains)
@@ -510,22 +510,22 @@ public class BSPGenerator : BaseLevelGenerator
 
         if (!alreadyContains)
         {
-            this.Map.Grid[x, y] = this.FillTileType;
+            this.OutputMap.Grid[x, y] = this.FillTileType;
             cooridor.Add(coord.Value);
         }
         else
         {
-            this.Map.Grid[coord.Value.x, coord.Value.y] = this.DebugSecondFillTileType;
+            this.OutputMap.Grid[coord.Value.x, coord.Value.y] = this.DebugSecondFillTileType;
         }
 	}
 
     private void applyOriginalMap()
     {
-        for (int x = 0; x < this.Bounds.IntWidth(); ++x)
+        for (int x = 0; x < this.Bounds.Size.X; ++x)
         {
-            for (int y = 0; y < this.Bounds.IntHeight(); ++y)
+            for (int y = 0; y < this.Bounds.Size.Y; ++y)
             {
-                this.Map.Grid[x + this.Bounds.IntXMin(), y + this.Bounds.IntYMin()] = _originalMap[x, y];
+                this.OutputMap.Grid[x + this.Bounds.Min.X, y + this.Bounds.Min.Y] = _originalMap[x, y];
             }
         }
     }
@@ -555,27 +555,27 @@ public class BSPGenerator : BaseLevelGenerator
 		// Visualize the carved area in the node
 		foreach (LevelGenMap.Coordinate coord in node.CarvedArea)
 		{
-			this.Map.Grid[coord.x, coord.y] = this.FillTileType;
+			this.OutputMap.Grid[coord.x, coord.y] = this.FillTileType;
 		}
 
 		// Visualize leaf outlines if desired
 		if (!includeLeafOutlines || node.Children == null)
             return;
 
-        if (node.Children[0].Bounds.width == node.Bounds.width)
+        if (node.Children[0].Bounds.Size.X == node.Bounds.Size.X)
         {
             // Horizontal line
-            for (int x = node.Children[0].Bounds.IntXMin(); x < node.Children[0].Bounds.IntXMax(); ++x)
+            for (int x = node.Children[0].Bounds.Min.X; x < node.Children[0].Bounds.Max.X; ++x)
             {
-                this.Map.Grid[x, node.Children[0].Bounds.IntYMax()] = this.FillTileType;
+                this.OutputMap.Grid[x, node.Children[0].Bounds.Max.Y] = this.FillTileType;
             }
         }
         else
         {
             // Vertical line
-            for (int y = node.Children[0].Bounds.IntYMin(); y < node.Children[0].Bounds.IntYMax(); ++y)
+            for (int y = node.Children[0].Bounds.Min.Y; y < node.Children[0].Bounds.Max.Y; ++y)
             {
-                this.Map.Grid[node.Children[0].Bounds.IntXMax(), y] = this.FillTileType;
+                this.OutputMap.Grid[node.Children[0].Bounds.Max.X, y] = this.FillTileType;
             }
         }
     }

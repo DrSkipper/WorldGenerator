@@ -16,9 +16,9 @@ public class BSPPlusCAGenerator : BaseLevelGenerator
         this.GeneratorName = "BSP + CA Generator";
     }
 
-    public override void SetupGeneration(LevelGenMap inputMap)
+    public override void SetupGeneration(LevelGenMap inputMap, LevelGenMap outputMap, IntegerRect bounds)
     {
-        base.SetupGeneration(inputMap);
+        base.SetupGeneration(inputMap, outputMap, bounds);
         _outputs = new List<LevelGenOutput>();
         cleanGenerator();
         this.AddPhase(this.BSPInitPhase);
@@ -41,9 +41,9 @@ public class BSPPlusCAGenerator : BaseLevelGenerator
     public void BSPInitPhase(int frames)
     {
         BSPGenerator bspGenerator = this.gameObject.AddComponent<BSPGenerator>();
-        bspGenerator.Bounds = new Rect(this.Bounds.IntX() + this.BSPBoundsReduction, this.Bounds.IntY() + this.BSPBoundsReduction, this.Bounds.IntWidth() - this.BSPBoundsReduction * 2, this.Bounds.IntHeight() - this.BSPBoundsReduction * 2);
+        IntegerRect bounds = IntegerRect.ConstructRectFromMinAndSize(this.Bounds.Min.X + this.BSPBoundsReduction, this.Bounds.Min.Y + this.BSPBoundsReduction, this.Bounds.Size.X - this.BSPBoundsReduction * 2, this.Bounds.Size.Y - this.BSPBoundsReduction * 2);
         bspGenerator.ApplyParams(this.BSPParams);
-        bspGenerator.SetupGeneration(this.InputMap);
+        bspGenerator.SetupGeneration(this.InputMap, this.OutputMap, bounds);
         _currentGenerator = bspGenerator;
         this.NextPhase();
     }
@@ -52,9 +52,9 @@ public class BSPPlusCAGenerator : BaseLevelGenerator
     {
         cleanGenerator();
         CAGenerator caGenerator = this.gameObject.AddComponent<CAGenerator>();
-        caGenerator.Bounds = new Rect(this.Bounds.IntX() + this.CABoundsReduction, this.Bounds.IntY() + this.CABoundsReduction, this.Bounds.IntWidth() - this.CABoundsReduction * 2, this.Bounds.IntHeight() - this.CABoundsReduction * 2);
+        IntegerRect bounds = IntegerRect.ConstructRectFromMinAndSize(this.Bounds.Min.X + this.CABoundsReduction, this.Bounds.Min.Y + this.CABoundsReduction, this.Bounds.Size.X - this.CABoundsReduction * 2, this.Bounds.Size.Y - this.CABoundsReduction * 2);
         caGenerator.ApplyParams(this.CAParams);
-        caGenerator.SetupGeneration(this.InputMap);
+        caGenerator.SetupGeneration(this.InputMap, this.OutputMap, bounds);
         _currentGenerator = caGenerator;
         this.NextPhase();
     }

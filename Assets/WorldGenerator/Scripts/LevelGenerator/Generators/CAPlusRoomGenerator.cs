@@ -14,9 +14,9 @@ public class CAPlusRoomGenerator : BaseLevelGenerator
         this.GeneratorName = "CA + Room Generator";
     }
 
-    public override void SetupGeneration(LevelGenMap inputMap)
+    public override void SetupGeneration(LevelGenMap inputMap, LevelGenMap outputMap, IntegerRect bounds)
     {
-        base.SetupGeneration(inputMap);
+        base.SetupGeneration(inputMap, outputMap, bounds);
         _outputs = new List<LevelGenOutput>();
         cleanGenerator();
         this.AddPhase(this.CAInitPhase);
@@ -40,7 +40,7 @@ public class CAPlusRoomGenerator : BaseLevelGenerator
     {
         MultiCAGenerator caGenerator = this.gameObject.AddComponent<MultiCAGenerator>();
         caGenerator.CaParams = this.CaParams;
-        caGenerator.SetupGeneration(this.InputMap);
+        caGenerator.SetupGeneration(this.InputMap, this.OutputMap, this.Bounds);
         _currentGenerator = caGenerator;
         this.NextPhase();
     }
@@ -50,7 +50,7 @@ public class CAPlusRoomGenerator : BaseLevelGenerator
         cleanGenerator();
         RoomGenerator roomGenerator = this.gameObject.AddComponent<RoomGenerator>();
         roomGenerator.ApplyParams(this.RoomParams);
-        roomGenerator.SetupGeneration(this.InputMap);
+        roomGenerator.SetupGeneration(this.InputMap, this.OutputMap, this.Bounds);
         _currentGenerator = roomGenerator;
         this.NextPhase();
     }
