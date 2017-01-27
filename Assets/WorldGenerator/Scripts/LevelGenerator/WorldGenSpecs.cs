@@ -53,6 +53,7 @@ public class WorldGenSpecs : ScriptableObject
         public IntegerVector Min;
         public IntegerVector Size;
         public GenerationStageType Type;
+        [BitMask(typeof(LevelGenMap.TileType))]
         public LevelGenMap.TileType ValidInputTiles;
         public LevelGenMap.TileType OutputTileType;
         public GenerationParam[] Parameters;

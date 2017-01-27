@@ -10,6 +10,7 @@ public class CAGenerator : BaseLevelGenerator
     [System.Serializable]
     public struct CAGenerationParams
     {
+        [BitMask(typeof(LevelGenMap.TileType))]
         public LevelGenMap.TileType ValidBaseTilesForGeneration;
         public LevelGenMap.TileType FillTileType;
         public float InitialChance;
@@ -19,7 +20,8 @@ public class CAGenerator : BaseLevelGenerator
         public int MaxCaves;
     }
 
-	public LevelGenMap.TileType ValidBaseTilesForGeneration = LevelGenMap.TileType.MASK_ALL;
+    [BitMask(typeof(LevelGenMap.TileType))]
+    public LevelGenMap.TileType ValidBaseTilesForGeneration = LevelGenMap.TileType.MASK_ALL;
 	public LevelGenMap.TileType FillTileType = LevelGenMap.TileType.B;
 	public float InitialChance = 0.48f;
 	public int DeathLimit = 4;
@@ -64,7 +66,7 @@ public class CAGenerator : BaseLevelGenerator
 		_originalMap = this.OutputMap.CopyOfGridRect(this.Bounds);
         _inputMap = this.InputMap.CopyOfGridRect(this.Bounds);
         this.OutputMap.FillMatchingTilesInRect(this.Bounds, BASE_TYPE, this.ValidBaseTilesForGeneration, this.InputMap);
-        this.OutputMap.FillMatchingTilesWithChance(this.Bounds, CAVE_TYPE, BASE_TYPE, this.InitialChance, this.InputMap);
+        this.OutputMap.FillMatchingTilesWithChance(this.Bounds, CAVE_TYPE, this.OutputMap == this.InputMap ? BASE_TYPE : this.ValidBaseTilesForGeneration, this.InitialChance, this.InputMap);
 		this.NextPhase();
 	}
 

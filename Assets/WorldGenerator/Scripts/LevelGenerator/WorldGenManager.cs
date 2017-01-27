@@ -9,7 +9,8 @@ public class WorldGenManager : MonoBehaviour
     public CAGenerator.CAGenerationParams DefaultCAParams;
     public BSPGenerator.BSPGenerationParams DefaultBSPParams;
     public RoomGenerator.RoomGenerationParams DefaultRoomParams;
-    public LevelGenMap LayerPrefab;
+    public LevelGenMap Layer1Prefab;
+    public LevelGenMap Layer2EtcPrefab;
     public CAGenerator CAGenerator;
     public BSPGenerator BSPGenerator;
     public RoomGenerator RoomGenerator;
@@ -123,7 +124,7 @@ public class WorldGenManager : MonoBehaviour
     {
         while (_layers.Count <= _currentLayer)
         {
-            LevelGenMap map = Instantiate<LevelGenMap>(this.LayerPrefab);
+            LevelGenMap map = Instantiate<LevelGenMap>(_currentLayer == 0 ? this.Layer1Prefab : this.Layer2EtcPrefab);
             map.Reset();
             map.Width = _specs.MapSize.X;
             map.Height = _specs.MapSize.Y;
