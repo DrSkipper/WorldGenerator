@@ -43,17 +43,18 @@ public class TerrainQuadRenderer : MonoBehaviour
         List<Vector3> vertices = new List<Vector3>();
         List<Vector3> normals = new List<Vector3>();
         List<Vector2> uvs = new List<Vector2>();
-        int[] triangles = new int[numTriangles * 3]; // Clockwise order of vertices within triangles (for correct render direction)
-
-        float finalZ = originZ + _height * this.TileRenderSize;
+        List<int> triangles = new List<int>(); // Clockwise order of vertices within triangles (for correct render direction)
+        
+        Vector2[] spriteUVs = this.Sprite.uv;
+        Vector2 bottomLeftUV = spriteUVs[0];
+        Vector2 bottomRightUV = spriteUVs[1];
+        Vector2 topLeftUV = spriteUVs[2];
+        Vector2 topRightUV = spriteUVs[3];
 
         for (int z = 0; z < _height; ++z)
         {
             for (int x = 0; x < _width; ++x)
             {
-                int tileIndex = _width * z + x;
-                int triangleIndex = tileIndex * 2 * 3;
-
                 // Create 4 verts
                 float smallZ = originZ + z * this.TileRenderSize;
                 float bigZ = smallZ + this.TileRenderSize;
@@ -61,102 +62,23 @@ public class TerrainQuadRenderer : MonoBehaviour
                 Vector3 bottomRight = new Vector3(bottomLeft.x + this.TileRenderSize, originY + heightMap[x, z] * this.TileRenderSize, bottomLeft.z);
                 Vector3 topLeft = new Vector3(bottomLeft.x, originY + heightMap[x, z] * this.TileRenderSize, bigZ);
                 Vector3 topRight = new Vector3(bottomRight.x, originY + heightMap[x, z] * this.TileRenderSize, topLeft.z);
-
-                // Indices of verts
-                int bottomLeftVert = vertices.Count;
-                int bottomRightVert = bottomLeftVert + 1;
-                int topLeftVert = bottomRightVert + 1;
-                int topRightVert = topLeftVert + 1;
-
-                // Assign vert indices to triangles
-                triangles[triangleIndex] = topLeftVert;
-                triangles[triangleIndex + 1] = bottomRightVert;
-                triangles[triangleIndex + 2] = bottomLeftVert;
-
-                triangles[triangleIndex + 3] = topLeftVert;
-                triangles[triangleIndex + 4] = topRightVert;
-                triangles[triangleIndex + 5] = bottomRightVert;
+                addQuad(bottomLeft, bottomRight, topLeft, topRight, bottomLeftUV, bottomRightUV, topLeftUV, topRightUV, Vector3.up, vertices, normals, uvs, triangles);
 
                 // Side tris
                 int rightNeighborHeight = (x + 1 >= _width ? heightMap[x, z] : heightMap[x + 1, z]) * this.TileRenderSize;
                 int upNeighborHeight = (z + 1 >= _height ? heightMap[x, z] : heightMap[x, z + 1]) * this.TileRenderSize;
+                int leftNeighborHeight = (x - 1 < 0 ? heightMap[x, z] : heightMap[x - 1, z]) * this.TileRenderSize;
+                int downNeighborHeight = (z - 1 < 0 ? heightMap[x, z] : heightMap[x, z - 1]) * this.TileRenderSize;
 
                 // Right side
                 Vector3 rightBottomLeft = new Vector3(bottomRight.x, originY + rightNeighborHeight, bottomRight.z);
                 Vector3 rightBottomRight = new Vector3(topRight.x, originY + rightNeighborHeight, topRight.z);
-                Vector3 rightTopLeft = new Vector3(bottomRight.x, originY + heightMap[x, z] * this.TileRenderSize, bottomRight.z);
-                Vector3 rightTopRight = new Vector3(topRight.x, originY + heightMap[x, z] * this.TileRenderSize, topRight.z);
-                int rightBottomLeftVert = topRightVert + 1;
-                int rightBottomRightVert = topRightVert + 2;
-                int rightTopLeftVert = topRightVert + 3;
-                int rightTopRightVert = topRightVert + 4;
-                triangles[triangleIndex + 6] = rightTopLeftVert;
-                triangles[triangleIndex + 7] = rightBottomRightVert;
-                triangles[triangleIndex + 8] = rightBottomLeftVert;
-                triangles[triangleIndex + 9] = rightTopLeftVert;
-                triangles[triangleIndex + 10] = rightTopRightVert;
-                triangles[triangleIndex + 11] = rightBottomRightVert;
+                addQuad(rightBottomLeft, rightBottomRight, bottomRight, topRight, bottomLeftUV, bottomRightUV, topLeftUV, topRightUV, Vector3.right, vertices, normals, uvs, triangles);
 
                 // Up side
                 Vector3 upBottomLeft = new Vector3(topRight.x, originY + upNeighborHeight, topRight.z);
                 Vector3 upBottomRight = new Vector3(topLeft.x, originY + upNeighborHeight, topLeft.z);
-                Vector3 upTopLeft = new Vector3(topRight.x, originY + heightMap[x, z] * this.TileRenderSize, topRight.z);
-                Vector3 upTopRight = new Vector3(topLeft.x, originY + heightMap[x, z] * this.TileRenderSize, topLeft.z);
-                int upBottomLeftVert = rightTopRightVert + 1;
-                int upBottomRightVert = rightTopRightVert + 2;
-                int upTopLeftVert = rightTopRightVert + 3;
-                int upTopRightVert = rightTopRightVert + 4;
-                triangles[triangleIndex + 12] = upTopLeftVert;
-                triangles[triangleIndex + 13] = upBottomRightVert;
-                triangles[triangleIndex + 14] = upBottomLeftVert;
-                triangles[triangleIndex + 15] = upTopLeftVert;
-                triangles[triangleIndex + 16] = upTopRightVert;
-                triangles[triangleIndex + 17] = upBottomRightVert;
-
-                // Handle UVs
-                Vector2[] spriteUVs = this.Sprite.uv;
-                Vector2 bottomLeftUV = spriteUVs[0];
-                Vector2 bottomRightUV = spriteUVs[1];
-                Vector2 topLeftUV = spriteUVs[2];
-                Vector2 topRightUV = spriteUVs[3];
-
-                // Add vertices and vertex data to mesh data
-                vertices.Add(bottomLeft);
-                vertices.Add(bottomRight);
-                vertices.Add(topLeft);
-                vertices.Add(topRight);
-                vertices.Add(rightBottomLeft);
-                vertices.Add(rightBottomRight);
-                vertices.Add(rightTopLeft);
-                vertices.Add(rightTopRight);
-                vertices.Add(upBottomLeft);
-                vertices.Add(upBottomRight);
-                vertices.Add(upTopLeft);
-                vertices.Add(upTopRight);
-                normals.Add(Vector3.up);
-                normals.Add(Vector3.up);
-                normals.Add(Vector3.up);
-                normals.Add(Vector3.up);
-                normals.Add(Vector3.up);
-                normals.Add(Vector3.up);
-                normals.Add(Vector3.up);
-                normals.Add(Vector3.up);
-                normals.Add(Vector3.up);
-                normals.Add(Vector3.up);
-                normals.Add(Vector3.up);
-                normals.Add(Vector3.up);
-                uvs.Add(bottomLeftUV);
-                uvs.Add(bottomRightUV);
-                uvs.Add(topLeftUV);
-                uvs.Add(topRightUV);
-                uvs.Add(bottomLeftUV);
-                uvs.Add(bottomRightUV);
-                uvs.Add(topLeftUV);
-                uvs.Add(topRightUV);
-                uvs.Add(bottomLeftUV);
-                uvs.Add(bottomRightUV);
-                uvs.Add(topLeftUV);
-                uvs.Add(topRightUV);
+                addQuad(upBottomLeft, upBottomRight, topRight, topLeft, bottomLeftUV, bottomRightUV, topLeftUV, topRightUV, Vector3.forward, vertices, normals, uvs, triangles);
             }
         }
 
@@ -165,9 +87,41 @@ public class TerrainQuadRenderer : MonoBehaviour
         mesh.vertices = vertices.ToArray();
         mesh.normals = normals.ToArray();
         mesh.uv = uvs.ToArray();
-        mesh.triangles = triangles;
+        mesh.triangles = triangles.ToArray();
 
         // Assign mesh to behaviors
         this.MeshFilter.mesh = mesh;
+    }
+
+    private void addQuad(Vector3 bottomLeft, Vector3 bottomRight, Vector3 topLeft, Vector3 topRight, Vector2 bottomLeftUV, Vector2 bottomRightUV, Vector2 topLeftUV, Vector2 topRightUV, Vector3 normal, List<Vector3> vertices, List<Vector3> normals, List<Vector2> uvs, List<int> triangles)
+    {
+        // Indices of verts
+        int bottomLeftVert = vertices.Count;
+        int bottomRightVert = bottomLeftVert + 1;
+        int topLeftVert = bottomRightVert + 1;
+        int topRightVert = topLeftVert + 1;
+
+        // Assign vert indices to triangles
+        triangles.Add(topLeftVert);
+        triangles.Add(bottomRightVert);
+        triangles.Add(bottomLeftVert);
+
+        triangles.Add(topLeftVert);
+        triangles.Add(topRightVert);
+        triangles.Add(bottomRightVert);
+
+        // Add vertices and vertex data to mesh data
+        vertices.Add(bottomLeft);
+        vertices.Add(bottomRight);
+        vertices.Add(topLeft);
+        vertices.Add(topRight);
+        normals.Add(normal);
+        normals.Add(normal);
+        normals.Add(normal);
+        normals.Add(normal);
+        uvs.Add(bottomLeftUV);
+        uvs.Add(bottomRightUV);
+        uvs.Add(topLeftUV);
+        uvs.Add(topRightUV);
     }
 }
