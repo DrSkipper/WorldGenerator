@@ -36,7 +36,6 @@ public class TerrainQuadRenderer : MonoBehaviour
         int originY = 0; // this.transform.position.y;
         int originZ = 0; // this.transform.position.z;
 
-        // Generate mesh data
         List<Vector3> vertices = new List<Vector3>();
         List<Vector3> normals = new List<Vector3>();
         List<Vector2> uvs = new List<Vector2>();
@@ -48,14 +47,15 @@ public class TerrainQuadRenderer : MonoBehaviour
         Vector2 topLeftUV = spriteUVs[2];
         Vector2 topRightUV = spriteUVs[3];
 
+        // Generate mesh data
         for (int z = 0; z < _height; ++z)
         {
             for (int x = 0; x < _width; ++x)
             {
                 // Create 4 verts
                 int height = originY + heightMap[x, z] * this.TileRenderSize;
-                float smallZ = originZ + z * this.TileRenderSize;
-                float bigZ = smallZ + this.TileRenderSize;
+                int smallZ = originZ + z * this.TileRenderSize;
+                int bigZ = smallZ + this.TileRenderSize;
                 Vector3 bottomLeft = new Vector3(originX + x * this.TileRenderSize, height, smallZ);
                 Vector3 bottomRight = new Vector3(bottomLeft.x + this.TileRenderSize, height, bottomLeft.z);
                 Vector3 topLeft = new Vector3(bottomLeft.x, height, bigZ);
@@ -108,8 +108,6 @@ public class TerrainQuadRenderer : MonoBehaviour
         mesh.normals = normals.ToArray();
         mesh.uv = uvs.ToArray();
         mesh.triangles = triangles.ToArray();
-
-        // Assign mesh to behaviors
         this.MeshFilter.mesh = mesh;
     }
 
