@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-public class MapGridSpaceInfo
+public class WorldTileInfo
 {
     public enum TileType
     {
@@ -17,20 +17,10 @@ public class MapGridSpaceInfo
         MineralVein,
         City
     }
-    
-    public int Type;
-    public List<int> Traits;
+
+    public TileType GetTileType() { return (TileType)this.Type; }
+    public void SetTileType(TileType type) { this.Type = (int)type; }
     public int NumTraits { get { return this.Traits == null ? 0 : this.Traits.Count; } }
-
-    public TileType GetTileType()
-    {
-        return (TileType)this.Type;
-    }
-
-    public void SetTileType(TileType type)
-    {
-        this.Type = (int)type;
-    }
 
     public TileTrait GetTileTrait(int index)
     {
@@ -67,18 +57,9 @@ public class MapGridSpaceInfo
         }
     }
 
-    public override bool Equals(object obj)
-    {
-        MapGridSpaceInfo other = obj as MapGridSpaceInfo;
-        if (other == null)
-            return false;
-        if (other.Type != this.Type)
-            return false;
-        if (other.NumTraits != this.NumTraits)
-            return false;
-        for (int i = 0; i < this.NumTraits; ++i)
-            if (!other.HasTrait(this.GetTileTrait(i)))
-                return false;
-        return true;
-    }
+    /**
+     * Data
+     */
+    public int Type;
+    public List<int> Traits;
 }
