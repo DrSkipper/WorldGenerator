@@ -12,6 +12,11 @@ public class TerrainManager : MonoBehaviour
     public TerrainQuadRenderer RightQuad;
     public TerrainQuadRenderer DownQuad;
 
+    public TerrainQuadRenderer UpLeftQuad;
+    public TerrainQuadRenderer UpRightQuad;
+    public TerrainQuadRenderer DownRightQuad;
+    public TerrainQuadRenderer DownLeftQuad;
+
     void Start()
     {
         this.WorldGenManager.AddUpdateDelegate(onWorldGenUpdate);
@@ -20,13 +25,24 @@ public class TerrainManager : MonoBehaviour
     public void BeginManagingWorld(IntegerVector startingPos)
     {
         WorldTileInfo me = _world[startingPos.X, startingPos.Y];
-        WorldTileInfo leftNeighbor = startingPos.X > 0 ? _world[startingPos.X - 1, startingPos.Y] : _world[_world.GetLength(0) - 1, startingPos.Y];
-        WorldTileInfo upNeighbor = startingPos.Y < _world.GetLength(1) - 1 ? _world[startingPos.X, startingPos.Y + 1] : _world[startingPos.X, 0];
-        WorldTileInfo rightNeighbor = startingPos.X < _world.GetLength(0) - 1 ? _world[startingPos.X + 1, startingPos.Y] : _world[0, startingPos.Y];
-        WorldTileInfo downNeighbor = startingPos.Y > 0 ? _world[startingPos.X, startingPos.Y - 1] : _world[startingPos.X, _world.GetLength(1) - 1];
+        int leftX = startingPos.X > 0 ? startingPos.X - 1 : _world.GetLength(0) - 1;
+        int rightX = startingPos.X < _world.GetLength(0) - 1 ? startingPos.X + 1 : 0;
+        int downY = startingPos.Y > 0 ? startingPos.Y - 1 : _world.GetLength(1) - 1;
+        int upY = startingPos.Y < _world.GetLength(1) - 1 ? startingPos.Y + 1 : 0;
+
+        WorldTileInfo leftNeighbor = _world[leftX, startingPos.Y];
+        WorldTileInfo upNeighbor = _world[startingPos.X, upY];
+        WorldTileInfo rightNeighbor = _world[rightX, startingPos.Y];
+        WorldTileInfo downNeighbor = _world[startingPos.X, downY];
+
+        WorldTileInfo upperLeftNeighbor = _world[leftX, upY];
+        WorldTileInfo upperRightNeighbor = _world[rightX, upY];
+        WorldTileInfo downRightNeighbor = _world[rightX, downY];
+        WorldTileInfo downLeftNeighbor = _world[leftX, downY];
 
         if (!me.TerrainInitialized)
             me.InitializeTerrain(this.WorldInfo, leftNeighbor, upNeighbor, rightNeighbor, downNeighbor);
+
         if (!leftNeighbor.TerrainInitialized)
             leftNeighbor.InitializeTerrain(this.WorldInfo, null, null, me, null);
         if (!upNeighbor.TerrainInitialized)
@@ -36,11 +52,25 @@ public class TerrainManager : MonoBehaviour
         if (!downNeighbor.TerrainInitialized)
             downNeighbor.InitializeTerrain(this.WorldInfo, null, me, null, null);
 
+        if (!upperLeftNeighbor.TerrainInitialized)
+            upperLeftNeighbor.InitializeTerrain(this.WorldInfo, null, null, upNeighbor, leftNeighbor);
+        if (!upperRightNeighbor.TerrainInitialized)
+            upperRightNeighbor.InitializeTerrain(this.WorldInfo, upNeighbor, null, null, rightNeighbor);
+        if (!downRightNeighbor.TerrainInitialized)
+            downRightNeighbor.InitializeTerrain(this.WorldInfo, downNeighbor, rightNeighbor, null, null);
+        if (!downLeftNeighbor.TerrainInitialized)
+            downLeftNeighbor.InitializeTerrain(this.WorldInfo, null, leftNeighbor, downNeighbor, null);
+
         this.MainQuad.CreateTerrainWithHeightMap(me, leftNeighbor, upNeighbor, rightNeighbor, downNeighbor);
         this.LeftQuad.CreateTerrainWithHeightMap(leftNeighbor, null, null, me, null);
         this.UpQuad.CreateTerrainWithHeightMap(upNeighbor, null, null, null, me);
         this.RightQuad.CreateTerrainWithHeightMap(rightNeighbor, me, null, null, null);
         this.DownQuad.CreateTerrainWithHeightMap(downNeighbor, null, me, null, null);
+
+        this.UpLeftQuad.CreateTerrainWithHeightMap(upperLeftNeighbor, null, null, upNeighbor, leftNeighbor);
+        this.UpRightQuad.CreateTerrainWithHeightMap(upperRightNeighbor, upNeighbor, null, null, rightNeighbor);
+        this.DownRightQuad.CreateTerrainWithHeightMap(downRightNeighbor, downNeighbor, rightNeighbor, null, null);
+        this.DownLeftQuad.CreateTerrainWithHeightMap(downLeftNeighbor, null, leftNeighbor, downNeighbor, null);
     }
 
     /**
@@ -52,11 +82,17 @@ public class TerrainManager : MonoBehaviour
     {
         if (finished)
         {
+            int size = this.WorldInfo.QuadSize * this.MainQuad.TileRenderSize;
             this.MainQuad.transform.SetPosition(0, 0, 0);
-            this.LeftQuad.transform.SetPosition(-this.WorldInfo.QuadSize * this.LeftQuad.TileRenderSize, 0, 0);
-            this.UpQuad.transform.SetPosition(0, 0, this.WorldInfo.QuadSize * this.UpQuad.TileRenderSize);
-            this.RightQuad.transform.SetPosition(this.WorldInfo.QuadSize * this.RightQuad.TileRenderSize, 0, 0);
-            this.DownQuad.transform.SetPosition(0, 0, -this.WorldInfo.QuadSize * this.DownQuad.TileRenderSize);
+            this.LeftQuad.transform.SetPosition(-size, 0, 0);
+            this.UpQuad.transform.SetPosition(0, 0, size);
+            this.RightQuad.transform.SetPosition(size, 0, 0);
+            this.DownQuad.transform.SetPosition(0, 0, -size);
+
+            this.UpLeftQuad.transform.SetPosition(-size, 0, size);
+            this.UpRightQuad.transform.SetPosition(size, 0, size);
+            this.DownRightQuad.transform.SetPosition(size, 0, -size);
+            this.DownLeftQuad.transform.SetPosition(-size, 0, -size);
 
             createWorldTileData(this.WorldGenManager.Specs, this.WorldGenManager.Layers);
             this.BeginManagingWorld(IntegerVector.Zero);
