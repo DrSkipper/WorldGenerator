@@ -16,6 +16,8 @@ public class WorldGenManager : MonoBehaviour
     public RoomGenerator RoomGenerator;
 
     public delegate void WorldGenerationUpdateDelegate(bool finished);
+    public WorldGenSpecs Specs { get { return _specs; } }
+    public List<LevelGenMap> Layers { get { return _layers; } }
 
     public void InitiateGeneration(WorldGenSpecs specs)
     {

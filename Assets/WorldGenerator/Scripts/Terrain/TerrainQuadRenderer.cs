@@ -9,12 +9,17 @@ public class TerrainQuadRenderer : MonoBehaviour
     public int TileRenderSize = 20;
     public Sprite Sprite;
 
-    public void CreateTerrainWithHeightMap(int[,] heightMap)
+    public void CreateTerrainWithHeightMap(WorldTileInfo thisTile, WorldTileInfo leftNeighbor, WorldTileInfo upNeighbor, WorldTileInfo rightNeighbor, WorldTileInfo downNeighbor)
     {
         this.Clear();
-        _width = heightMap.GetLength(0);
-        _height = heightMap.GetLength(1);
-        createTerrainUsingHeightMap(heightMap);
+        WorldTileInfo.TerrainInfo[,] terrain = thisTile.Terrain;
+        _width = terrain.GetLength(0);
+        _height = terrain.GetLength(1);
+        _leftNeighbor = leftNeighbor;
+        _upNeighbor = upNeighbor;
+        _rightNeighbor = rightNeighbor;
+        _downNeighbor = downNeighbor;
+        createTerrainUsingHeightMap(terrain);
     }
 
     public void Clear()
@@ -29,8 +34,12 @@ public class TerrainQuadRenderer : MonoBehaviour
     private int _width;
     private int _height;
     private bool _cleared = true;
+    private WorldTileInfo _leftNeighbor;
+    private WorldTileInfo _upNeighbor;
+    private WorldTileInfo _rightNeighbor;
+    private WorldTileInfo _downNeighbor;
 
-    private void createTerrainUsingHeightMap(int[,] heightMap)
+    private void createTerrainUsingHeightMap(WorldTileInfo.TerrainInfo[,] terrain)
     {
         int originX = 0; // this.transform.position.x;
         int originY = 0; // this.transform.position.y;
@@ -41,6 +50,7 @@ public class TerrainQuadRenderer : MonoBehaviour
         List<Vector2> uvs = new List<Vector2>();
         List<int> triangles = new List<int>(); // Clockwise order of vertices within triangles (for correct render direction)
         
+        //TODO: get sprite UVs from terrain info
         Vector2[] spriteUVs = this.Sprite.uv;
         Vector2 bottomLeftUV = spriteUVs[0];
         Vector2 bottomRightUV = spriteUVs[1];
@@ -53,7 +63,7 @@ public class TerrainQuadRenderer : MonoBehaviour
             for (int x = 0; x < _width; ++x)
             {
                 // Create 4 verts
-                int height = originY + heightMap[x, z] * this.TileRenderSize;
+                int height = originY + terrain[x, z].Height * this.TileRenderSize;
                 int smallZ = originZ + z * this.TileRenderSize;
                 int bigZ = smallZ + this.TileRenderSize;
                 Vector3 bottomLeft = new Vector3(originX + x * this.TileRenderSize, height, smallZ);
@@ -63,10 +73,10 @@ public class TerrainQuadRenderer : MonoBehaviour
                 addQuad(bottomLeft, bottomRight, topLeft, topRight, bottomLeftUV, bottomRightUV, topLeftUV, topRightUV, Vector3.up, vertices, normals, uvs, triangles);
 
                 // Side tris
-                int rightNeighborHeight = x + 1 >= _width ? height : (originY + heightMap[x + 1, z] * this.TileRenderSize);
-                int upNeighborHeight = z + 1 >= _height ? height : (originY + heightMap[x, z + 1] * this.TileRenderSize);
-                int leftNeighborHeight = x - 1 < 0 ? height : (originY + heightMap[x - 1, z] * this.TileRenderSize);
-                int downNeighborHeight = z - 1 < 0 ? height : (originY + heightMap[x, z - 1] * this.TileRenderSize);
+                int rightNeighborHeight = originY + getRightNeighborHeight(terrain, x, z);
+                int upNeighborHeight = originY + getUpNeighborHeight(terrain, x, z);
+                int leftNeighborHeight = originY + getLeftNeighborHeight(terrain, x, z);
+                int downNeighborHeight = originY + getDownNeighborHeight(terrain, x, z);
 
                 // Right side
                 if (rightNeighborHeight < height)
@@ -109,6 +119,70 @@ public class TerrainQuadRenderer : MonoBehaviour
         mesh.uv = uvs.ToArray();
         mesh.triangles = triangles.ToArray();
         this.MeshFilter.mesh = mesh;
+    }
+
+    private int getLeftNeighborHeight(WorldTileInfo.TerrainInfo[,] terrain, int x, int y)
+    {
+        int heightData = 0;
+        if (x - 1 < _width)
+        {
+            if (_leftNeighbor != null && _leftNeighbor.TerrainInitialized)
+                heightData = _leftNeighbor.Terrain[_width - 1, y].Height;
+        }
+        else
+        {
+            heightData = terrain[x - 1, y].Height;
+        }
+
+        return heightData * this.TileRenderSize;
+    }
+
+    private int getUpNeighborHeight(WorldTileInfo.TerrainInfo[,] terrain, int x, int y)
+    {
+        int heightData = 0;
+        if (y + 1 >= _height)
+        {
+            if (_upNeighbor != null && _upNeighbor.TerrainInitialized)
+                heightData = _upNeighbor.Terrain[x, 0].Height;
+        }
+        else
+        {
+            heightData = terrain[x, y + 1].Height;
+        }
+
+        return heightData * this.TileRenderSize;
+    }
+
+    private int getRightNeighborHeight(WorldTileInfo.TerrainInfo[,] terrain, int x, int y)
+    {
+        int heightData = 0;
+        if (x + 1 >= _width)
+        {
+            if (_rightNeighbor != null && _rightNeighbor.TerrainInitialized)
+                heightData = _rightNeighbor.Terrain[0, y].Height;
+        }
+        else
+        {
+            heightData = terrain[x + 1, y].Height;
+        }
+
+        return heightData * this.TileRenderSize;
+    }
+
+    private int getDownNeighborHeight(WorldTileInfo.TerrainInfo[,] terrain, int x, int y)
+    {
+        int heightData = 0;
+        if (y - 1 < 0)
+        {
+            if (_downNeighbor != null && _downNeighbor.TerrainInitialized)
+                heightData = _downNeighbor.Terrain[x, _height - 1].Height;
+        }
+        else
+        {
+            heightData = terrain[x, y - 1].Height;
+        }
+
+        return heightData * this.TileRenderSize;
     }
 
     private void addQuad(Vector3 bottomLeft, Vector3 bottomRight, Vector3 topLeft, Vector3 topRight, Vector2 bottomLeftUV, Vector2 bottomRightUV, Vector2 topLeftUV, Vector2 topRightUV, Vector3 normal, List<Vector3> vertices, List<Vector3> normals, List<Vector2> uvs, List<int> triangles)
