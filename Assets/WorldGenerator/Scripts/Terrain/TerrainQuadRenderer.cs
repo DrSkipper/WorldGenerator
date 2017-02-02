@@ -124,7 +124,7 @@ public class TerrainQuadRenderer : MonoBehaviour
     private int getLeftNeighborHeight(WorldTileInfo.TerrainInfo[,] terrain, int x, int y)
     {
         int heightData = 0;
-        if (x - 1 < _width)
+        if (x - 1 < 0)
         {
             if (_leftNeighbor != null && _leftNeighbor.TerrainInitialized)
                 heightData = _leftNeighbor.Terrain[_width - 1, y].Height;
