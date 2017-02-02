@@ -21,8 +21,18 @@ public class WorldTileInfo
 
     public class TerrainInfo
     {
+        public enum TerrainType
+        {
+            Plains,
+            Hills,
+            Mountains,
+            Water,
+            Desert,
+            Beach
+        }
+
+        public TerrainType Type;
         public int Height;
-        //TODO - terrain type - similar to tile types but includes beach and stuff
         //TODO - doodads - trees etc
     }
 
@@ -105,6 +115,9 @@ public class WorldTileInfo
 
         //TODO: handle different methods for distributing height
         randomFill(this.Terrain, low, high);
+        //TODO: Don't always fill with default terrain type, handle borders between regions, beaches around water, oasis tiles, etc
+        simpleTypeSet(this.Terrain, this.GetTileType());
+        //TODO: Add doodads like trees
     }
 
     /**
@@ -124,6 +137,41 @@ public class WorldTileInfo
             for (int y = 0; y < heightMap.GetLength(1); ++y)
             {
                 heightMap[x, y].Height = Random.Range(low, high + 1);
+            }
+        }
+    }
+
+    /**
+     * Private
+     */
+    private static void simpleTypeSet(TerrainInfo[,] heightMap, TileType tileType)
+    {
+        TerrainInfo.TerrainType type = TerrainInfo.TerrainType.Plains;
+
+        switch (tileType)
+        {
+            default:
+            case TileType.Plains:
+                break;
+            case TileType.Hills:
+                type = TerrainInfo.TerrainType.Hills;
+                break;
+            case TileType.Mountains:
+                type = TerrainInfo.TerrainType.Mountains;
+                break;
+            case TileType.Water:
+                type = TerrainInfo.TerrainType.Water;
+                break;
+            case TileType.Desert:
+                type = TerrainInfo.TerrainType.Desert;
+                break;
+        }
+
+        for (int x = 0; x < heightMap.GetLength(0); ++x)
+        {
+            for (int y = 0; y < heightMap.GetLength(1); ++y)
+            {
+                heightMap[x, y].Type = type;
             }
         }
     }

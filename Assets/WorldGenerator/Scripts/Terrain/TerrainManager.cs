@@ -17,6 +17,8 @@ public class TerrainManager : MonoBehaviour
     public TerrainQuadRenderer DownRightQuad;
     public TerrainQuadRenderer DownLeftQuad;
 
+    public IntegerVector SpawnPoint; //TODO: Should be data driven
+
     void Start()
     {
         this.WorldGenManager.AddUpdateDelegate(onWorldGenUpdate);
@@ -95,7 +97,7 @@ public class TerrainManager : MonoBehaviour
             this.DownLeftQuad.transform.SetPosition(-size, 0, -size);
 
             createWorldTileData(this.WorldGenManager.Specs, this.WorldGenManager.Layers);
-            this.BeginManagingWorld(IntegerVector.Zero);
+            this.BeginManagingWorld(this.SpawnPoint);
         }
     }
 

@@ -7,11 +7,20 @@ public class TerrainQuadRenderer : MonoBehaviour
 {
     public MeshFilter MeshFilter;
     public int TileRenderSize = 20;
-    public Sprite Sprite;
+    public Texture2D Atlas;
 
     public void CreateTerrainWithHeightMap(WorldTileInfo thisTile, WorldTileInfo leftNeighbor, WorldTileInfo upNeighbor, WorldTileInfo rightNeighbor, WorldTileInfo downNeighbor)
     {
         this.Clear();
+        if (_spriteUVs == null)
+        {
+            Sprite[] sprites = this.Atlas.GetSpritesArray();
+            _spriteUVs = new Vector2[sprites.Length][];
+            for (int i = 0; i < sprites.Length; ++i)
+            {
+                _spriteUVs[i] = sprites[i].uv; //NOTE: May have to switch to GetUVs if previously encountered bug with .uv appears
+            }
+        }
         WorldTileInfo.TerrainInfo[,] terrain = thisTile.Terrain;
         _width = terrain.GetLength(0);
         _height = terrain.GetLength(1);
@@ -38,6 +47,7 @@ public class TerrainQuadRenderer : MonoBehaviour
     private WorldTileInfo _upNeighbor;
     private WorldTileInfo _rightNeighbor;
     private WorldTileInfo _downNeighbor;
+    private Vector2[][] _spriteUVs;
 
     private void createTerrainUsingHeightMap(WorldTileInfo.TerrainInfo[,] terrain)
     {
@@ -49,19 +59,19 @@ public class TerrainQuadRenderer : MonoBehaviour
         List<Vector3> normals = new List<Vector3>();
         List<Vector2> uvs = new List<Vector2>();
         List<int> triangles = new List<int>(); // Clockwise order of vertices within triangles (for correct render direction)
-        
-        //TODO: get sprite UVs from terrain info
-        Vector2[] spriteUVs = this.Sprite.uv;
-        Vector2 bottomLeftUV = spriteUVs[0];
-        Vector2 bottomRightUV = spriteUVs[1];
-        Vector2 topLeftUV = spriteUVs[2];
-        Vector2 topRightUV = spriteUVs[3];
 
         // Generate mesh data
         for (int z = 0; z < _height; ++z)
         {
             for (int x = 0; x < _width; ++x)
             {
+                // Get UVs
+                Vector2[] spriteUVs = _spriteUVs[(int)terrain[x, z].Type];
+                Vector2 bottomLeftUV = spriteUVs[0];
+                Vector2 bottomRightUV = spriteUVs[1];
+                Vector2 topLeftUV = spriteUVs[2];
+                Vector2 topRightUV = spriteUVs[3];
+
                 // Create 4 verts
                 int height = originY + terrain[x, z].Height * this.TileRenderSize;
                 int smallZ = originZ + z * this.TileRenderSize;
