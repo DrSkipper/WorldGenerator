@@ -51,9 +51,9 @@ public class TerrainQuadRenderer : MonoBehaviour
 
     private void createTerrainUsingHeightMap(WorldTileInfo.TerrainInfo[,] terrain)
     {
-        int originX = 0; // this.transform.position.x;
+        int originX = -terrain.GetLength(0) / 2 * this.TileRenderSize; // this.transform.position.x;
         int originY = 0; // this.transform.position.y;
-        int originZ = 0; // this.transform.position.z;
+        int originZ = -terrain.GetLength(1) / 2 * this.TileRenderSize; // this.transform.position.z;
 
         List<Vector3> vertices = new List<Vector3>();
         List<Vector3> normals = new List<Vector3>();

@@ -18,9 +18,12 @@ public class TerrainManager : MonoBehaviour
     public TerrainQuadRenderer DownLeftQuad;
 
     public IntegerVector SpawnPoint; //TODO: Should be data driven
+    public Transform Tracker;
+    public int ExtraBounds = 10;
 
     void Start()
     {
+        _halfQuadSize = this.WorldInfo.QuadSize * this.MainQuad.TileRenderSize / 2;
         this.WorldGenManager.AddUpdateDelegate(onWorldGenUpdate);
     }
 
@@ -75,30 +78,79 @@ public class TerrainManager : MonoBehaviour
         this.DownLeftQuad.CreateTerrainWithHeightMap(downLeftNeighbor, null, leftNeighbor, downNeighbor, null);
     }
 
+    void FixedUpdate()
+    {
+        if (this.Tracker.position.x < this.MainQuad.transform.position.x - _halfQuadSize - this.ExtraBounds)
+        {
+            // Center left quad, unload up right, right, and down right - load up left, left and down left
+        }
+        else if (this.Tracker.position.x > this.MainQuad.transform.position.x + _halfQuadSize + this.ExtraBounds)
+        {
+            // Center right quad
+        }
+        else if (this.Tracker.position.z < this.MainQuad.transform.position.z - _halfQuadSize - this.ExtraBounds)
+        {
+            // Center down quad
+        }
+        else if (this.Tracker.position.z > this.MainQuad.transform.position.z + _halfQuadSize + this.ExtraBounds)
+        {
+            // Center up quad
+        }
+    }
+
     /**
      * Private
      */
     private WorldTileInfo[,] _world;
+    private int _halfQuadSize;
+
+    private void centerLeftQuad()
+    {
+        // Swap quad references
+        TerrainQuadRenderer newUpRight = this.UpQuad;
+        TerrainQuadRenderer newRight = this.MainQuad;
+        TerrainQuadRenderer newDownRight = this.DownQuad;
+
+        this.UpQuad = this.UpLeftQuad;
+        this.MainQuad = this.LeftQuad;
+        this.DownQuad = this.DownLeftQuad;
+        this.UpLeftQuad = this.UpRightQuad;
+        this.LeftQuad = this.RightQuad;
+        this.DownLeftQuad = this.DownRightQuad;
+        this.UpRightQuad = newUpRight;
+        this.RightQuad = newRight;
+        this.DownRightQuad = newDownRight;
+
+        // Move left quads into correct position
+        assingQuadPositions();
+
+        //TODO: recenter all actors and other objects
+        //TODO: Load new data for left quads
+    }
 
     private void onWorldGenUpdate(bool finished)
     {
         if (finished)
         {
-            int size = this.WorldInfo.QuadSize * this.MainQuad.TileRenderSize;
-            this.MainQuad.transform.SetPosition(0, 0, 0);
-            this.LeftQuad.transform.SetPosition(-size, 0, 0);
-            this.UpQuad.transform.SetPosition(0, 0, size);
-            this.RightQuad.transform.SetPosition(size, 0, 0);
-            this.DownQuad.transform.SetPosition(0, 0, -size);
-
-            this.UpLeftQuad.transform.SetPosition(-size, 0, size);
-            this.UpRightQuad.transform.SetPosition(size, 0, size);
-            this.DownRightQuad.transform.SetPosition(size, 0, -size);
-            this.DownLeftQuad.transform.SetPosition(-size, 0, -size);
-
+            assingQuadPositions();
             createWorldTileData(this.WorldGenManager.Specs, this.WorldGenManager.Layers);
             this.BeginManagingWorld(this.SpawnPoint);
         }
+    }
+
+    private void assingQuadPositions()
+    {
+        int size = _halfQuadSize * 2;
+        this.MainQuad.transform.SetPosition(0, 0, 0);
+        this.LeftQuad.transform.SetPosition(-size, 0, 0);
+        this.UpQuad.transform.SetPosition(0, 0, size);
+        this.RightQuad.transform.SetPosition(size, 0, 0);
+        this.DownQuad.transform.SetPosition(0, 0, -size);
+
+        this.UpLeftQuad.transform.SetPosition(-size, 0, size);
+        this.UpRightQuad.transform.SetPosition(size, 0, size);
+        this.DownRightQuad.transform.SetPosition(size, 0, -size);
+        this.DownLeftQuad.transform.SetPosition(-size, 0, -size);
     }
 
     private void createWorldTileData(WorldGenSpecs specs, List<LevelGenMap> layers)
