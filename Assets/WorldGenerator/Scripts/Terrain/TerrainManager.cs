@@ -122,7 +122,7 @@ public class TerrainManager : MonoBehaviour
         this.RightQuad = this.DownRightQuad;
         this.DownLeftQuad = this.UpLeftQuad;
         this.DownQuad = this.UpQuad;
-        this.DownLeftQuad = this.UpRightQuad;
+        this.DownRightQuad = this.UpRightQuad;
         this.UpLeftQuad = newUpLeft;
         this.UpQuad = newUp;
         this.UpRightQuad = newUpRight;
@@ -144,7 +144,7 @@ public class TerrainManager : MonoBehaviour
         this.RightQuad = this.UpRightQuad;
         this.UpLeftQuad = this.DownLeftQuad;
         this.UpQuad = this.DownQuad;
-        this.UpLeftQuad = this.DownRightQuad;
+        this.UpRightQuad = this.DownRightQuad;
         this.DownLeftQuad = newDownLeft;
         this.DownQuad = newDown;
         this.DownRightQuad = newDownRight;
