@@ -52,4 +52,9 @@ public static class TransformExtensions
     {
         self.localPosition = new Vector3(self.localPosition.x, self.localPosition.y, z);
     }
+
+    public static void AddPosition(this Transform self, float x, float y, float z)
+    {
+        self.position = new Vector3(self.position.x + x, self.position.y + y, self.position.z + z);
+    }
 }

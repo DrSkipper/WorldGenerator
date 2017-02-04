@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 
 public class TerrainManager : MonoBehaviour
@@ -20,25 +21,174 @@ public class TerrainManager : MonoBehaviour
     public IntegerVector SpawnPoint; //TODO: Should be data driven
     public Transform Tracker;
     public int ExtraBounds = 10;
+    public List<GameObject> IgnoreRecenter;
 
     void Start()
     {
         _halfQuadSize = this.WorldInfo.QuadSize * this.MainQuad.TileRenderSize / 2;
+        _recenterObjects = new List<GameObject>();
         this.WorldGenManager.AddUpdateDelegate(onWorldGenUpdate);
     }
 
-    public void BeginManagingWorld(IntegerVector startingPos)
+    void FixedUpdate()
     {
-        WorldTileInfo me = _world[startingPos.X, startingPos.Y];
-        int leftX = startingPos.X > 0 ? startingPos.X - 1 : _world.GetLength(0) - 1;
-        int rightX = startingPos.X < _world.GetLength(0) - 1 ? startingPos.X + 1 : 0;
-        int downY = startingPos.Y > 0 ? startingPos.Y - 1 : _world.GetLength(1) - 1;
-        int upY = startingPos.Y < _world.GetLength(1) - 1 ? startingPos.Y + 1 : 0;
+        if (this.Tracker.position.x < this.MainQuad.transform.position.x - _halfQuadSize - this.ExtraBounds)
+        {
+            centerLeftQuad();
+        }
+        else if (this.Tracker.position.x > this.MainQuad.transform.position.x + _halfQuadSize + this.ExtraBounds)
+        {
+            centerRightQuad();
+        }
+        else if (this.Tracker.position.z < this.MainQuad.transform.position.z - _halfQuadSize - this.ExtraBounds)
+        {
+            centerDownQuad();
+        }
+        else if (this.Tracker.position.z > this.MainQuad.transform.position.z + _halfQuadSize + this.ExtraBounds)
+        {
+            centerUpQuad();
+        }
+    }
 
-        WorldTileInfo leftNeighbor = _world[leftX, startingPos.Y];
-        WorldTileInfo upNeighbor = _world[startingPos.X, upY];
-        WorldTileInfo rightNeighbor = _world[rightX, startingPos.Y];
-        WorldTileInfo downNeighbor = _world[startingPos.X, downY];
+    /**
+     * Private
+     */
+    private WorldTileInfo[,] _world;
+    private int _halfQuadSize;
+    List<GameObject> _recenterObjects;
+    IntegerVector _center;
+
+    private enum LoadSection
+    {
+        AllSides,
+        Left,
+        Up,
+        Right,
+        Down
+    }
+
+    private void centerLeftQuad()
+    {
+        // Swap quad references
+        TerrainQuadRenderer newUpRight = this.UpQuad;
+        TerrainQuadRenderer newRight = this.MainQuad;
+        TerrainQuadRenderer newDownRight = this.DownQuad;
+        this.UpQuad = this.UpLeftQuad;
+        this.MainQuad = this.LeftQuad;
+        this.DownQuad = this.DownLeftQuad;
+        this.UpLeftQuad = this.UpRightQuad;
+        this.LeftQuad = this.RightQuad;
+        this.DownLeftQuad = this.DownRightQuad;
+        this.UpRightQuad = newUpRight;
+        this.RightQuad = newRight;
+        this.DownRightQuad = newDownRight;
+
+        _center.X = _center.X > 0 ? _center.X - 1 : _world.GetLength(0) - 1;
+        assingQuadPositions(); // Move left quads into correct position
+        recenter(_halfQuadSize * 2, 0); // Recenter all actors and other objects
+        loadWorld(LoadSection.Left); // Load new data for left quads
+    }
+
+    private void centerRightQuad()
+    {
+        // Swap quad references
+        TerrainQuadRenderer newUpLeft = this.UpQuad;
+        TerrainQuadRenderer newLeft = this.MainQuad;
+        TerrainQuadRenderer newDownLeft = this.DownQuad;
+        this.UpQuad = this.UpRightQuad;
+        this.MainQuad = this.RightQuad;
+        this.DownQuad = this.DownRightQuad;
+        this.UpRightQuad = this.UpLeftQuad;
+        this.RightQuad = this.LeftQuad;
+        this.DownRightQuad = this.DownLeftQuad;
+        this.UpLeftQuad = newUpLeft;
+        this.LeftQuad = newLeft;
+        this.DownLeftQuad = newDownLeft;
+
+        _center.X = _center.X < _world.GetLength(0) - 1 ? _center.X + 1 : 0;
+        assingQuadPositions(); // Move left quads into correct position
+        recenter(-_halfQuadSize * 2, 0); // Recenter all actors and other objects
+        loadWorld(LoadSection.Right); // Load new data for left quads
+    }
+
+    private void centerDownQuad()
+    {
+        // Swap quad references
+        TerrainQuadRenderer newUpLeft = this.LeftQuad;
+        TerrainQuadRenderer newUp = this.MainQuad;
+        TerrainQuadRenderer newUpRight = this.RightQuad;
+        this.LeftQuad = this.DownLeftQuad;
+        this.MainQuad = this.DownQuad;
+        this.RightQuad = this.DownRightQuad;
+        this.DownLeftQuad = this.UpLeftQuad;
+        this.DownQuad = this.UpQuad;
+        this.DownLeftQuad = this.UpRightQuad;
+        this.UpLeftQuad = newUpLeft;
+        this.UpQuad = newUp;
+        this.UpRightQuad = newUpRight;
+
+        _center.Y = _center.Y > 0 ? _center.Y - 1 : _world.GetLength(1) - 1;
+        assingQuadPositions(); // Move left quads into correct position
+        recenter(0, _halfQuadSize * 2); // Recenter all actors and other objects
+        loadWorld(LoadSection.Down); // Load new data for left quads
+    }
+
+    private void centerUpQuad()
+    {
+        // Swap quad references
+        TerrainQuadRenderer newDownLeft = this.LeftQuad;
+        TerrainQuadRenderer newDown = this.MainQuad;
+        TerrainQuadRenderer newDownRight = this.RightQuad;
+        this.LeftQuad = this.UpLeftQuad;
+        this.MainQuad = this.UpQuad;
+        this.RightQuad = this.UpRightQuad;
+        this.UpLeftQuad = this.DownLeftQuad;
+        this.UpQuad = this.DownQuad;
+        this.UpLeftQuad = this.DownRightQuad;
+        this.DownLeftQuad = newDownLeft;
+        this.DownQuad = newDown;
+        this.DownRightQuad = newDownRight;
+
+        _center.Y = _center.Y < _world.GetLength(1) - 1 ? _center.Y + 1 : 0;
+        assingQuadPositions(); // Move left quads into correct position
+        recenter(0, -_halfQuadSize * 2); // Recenter all actors and other objects
+        loadWorld(LoadSection.Up); // Load new data for left quads
+    }
+
+    private void recenter(float offsetX, float offsetZ)
+    {
+        _recenterObjects.Clear();
+        SceneManager.GetActiveScene().GetRootGameObjects(_recenterObjects);
+        _recenterObjects.RemoveAllOptimized(this.IgnoreRecenter);
+        for (int i = 0; i < _recenterObjects.Count; ++i)
+        {
+            _recenterObjects[i].transform.AddPosition(offsetX, 0, offsetZ);
+        }
+    }
+
+    private void onWorldGenUpdate(bool finished)
+    {
+        if (finished)
+        {
+            _center = this.SpawnPoint;
+            assingQuadPositions();
+            createWorldTileData(this.WorldGenManager.Specs, this.WorldGenManager.Layers);
+            loadWorld(LoadSection.AllSides);
+        }
+    }
+
+    private void loadWorld(LoadSection section)
+    {
+        WorldTileInfo me = _world[_center.X, _center.Y];
+        int leftX = _center.X > 0 ? _center.X - 1 : _world.GetLength(0) - 1;
+        int rightX = _center.X < _world.GetLength(0) - 1 ? _center.X + 1 : 0;
+        int downY = _center.Y > 0 ? _center.Y - 1 : _world.GetLength(1) - 1;
+        int upY = _center.Y < _world.GetLength(1) - 1 ? _center.Y + 1 : 0;
+
+        WorldTileInfo leftNeighbor = _world[leftX, _center.Y];
+        WorldTileInfo upNeighbor = _world[_center.X, upY];
+        WorldTileInfo rightNeighbor = _world[rightX, _center.Y];
+        WorldTileInfo downNeighbor = _world[_center.X, downY];
 
         WorldTileInfo upperLeftNeighbor = _world[leftX, upY];
         WorldTileInfo upperRightNeighbor = _world[rightX, upY];
@@ -66,76 +216,32 @@ public class TerrainManager : MonoBehaviour
         if (!downLeftNeighbor.TerrainInitialized)
             downLeftNeighbor.InitializeTerrain(this.WorldInfo, null, leftNeighbor, downNeighbor, null);
 
-        this.MainQuad.CreateTerrainWithHeightMap(me, leftNeighbor, upNeighbor, rightNeighbor, downNeighbor);
-        this.LeftQuad.CreateTerrainWithHeightMap(leftNeighbor, null, null, me, null);
-        this.UpQuad.CreateTerrainWithHeightMap(upNeighbor, null, null, null, me);
-        this.RightQuad.CreateTerrainWithHeightMap(rightNeighbor, me, null, null, null);
-        this.DownQuad.CreateTerrainWithHeightMap(downNeighbor, null, me, null, null);
+        if (section == LoadSection.AllSides)
+            this.MainQuad.CreateTerrainWithHeightMap(me, leftNeighbor, upNeighbor, rightNeighbor, downNeighbor);
 
-        this.UpLeftQuad.CreateTerrainWithHeightMap(upperLeftNeighbor, null, null, upNeighbor, leftNeighbor);
-        this.UpRightQuad.CreateTerrainWithHeightMap(upperRightNeighbor, upNeighbor, null, null, rightNeighbor);
-        this.DownRightQuad.CreateTerrainWithHeightMap(downRightNeighbor, downNeighbor, rightNeighbor, null, null);
-        this.DownLeftQuad.CreateTerrainWithHeightMap(downLeftNeighbor, null, leftNeighbor, downNeighbor, null);
-    }
+        if (section == LoadSection.AllSides || section == LoadSection.Left)
+            this.LeftQuad.CreateTerrainWithHeightMap(leftNeighbor, null, null, me, null);
 
-    void FixedUpdate()
-    {
-        if (this.Tracker.position.x < this.MainQuad.transform.position.x - _halfQuadSize - this.ExtraBounds)
-        {
-            // Center left quad, unload up right, right, and down right - load up left, left and down left
-        }
-        else if (this.Tracker.position.x > this.MainQuad.transform.position.x + _halfQuadSize + this.ExtraBounds)
-        {
-            // Center right quad
-        }
-        else if (this.Tracker.position.z < this.MainQuad.transform.position.z - _halfQuadSize - this.ExtraBounds)
-        {
-            // Center down quad
-        }
-        else if (this.Tracker.position.z > this.MainQuad.transform.position.z + _halfQuadSize + this.ExtraBounds)
-        {
-            // Center up quad
-        }
-    }
+        if (section == LoadSection.AllSides || section == LoadSection.Up)
+            this.UpQuad.CreateTerrainWithHeightMap(upNeighbor, null, null, null, me);
 
-    /**
-     * Private
-     */
-    private WorldTileInfo[,] _world;
-    private int _halfQuadSize;
+        if (section == LoadSection.AllSides || section == LoadSection.Right)
+            this.RightQuad.CreateTerrainWithHeightMap(rightNeighbor, me, null, null, null);
 
-    private void centerLeftQuad()
-    {
-        // Swap quad references
-        TerrainQuadRenderer newUpRight = this.UpQuad;
-        TerrainQuadRenderer newRight = this.MainQuad;
-        TerrainQuadRenderer newDownRight = this.DownQuad;
+        if (section == LoadSection.AllSides || section == LoadSection.Down)
+            this.DownQuad.CreateTerrainWithHeightMap(downNeighbor, null, me, null, null);
 
-        this.UpQuad = this.UpLeftQuad;
-        this.MainQuad = this.LeftQuad;
-        this.DownQuad = this.DownLeftQuad;
-        this.UpLeftQuad = this.UpRightQuad;
-        this.LeftQuad = this.RightQuad;
-        this.DownLeftQuad = this.DownRightQuad;
-        this.UpRightQuad = newUpRight;
-        this.RightQuad = newRight;
-        this.DownRightQuad = newDownRight;
+        if (section == LoadSection.AllSides || section == LoadSection.Left || section == LoadSection.Up)
+            this.UpLeftQuad.CreateTerrainWithHeightMap(upperLeftNeighbor, null, null, upNeighbor, leftNeighbor);
 
-        // Move left quads into correct position
-        assingQuadPositions();
+        if (section == LoadSection.AllSides || section == LoadSection.Right || section == LoadSection.Up)
+            this.UpRightQuad.CreateTerrainWithHeightMap(upperRightNeighbor, upNeighbor, null, null, rightNeighbor);
 
-        //TODO: recenter all actors and other objects
-        //TODO: Load new data for left quads
-    }
+        if (section == LoadSection.AllSides || section == LoadSection.Right || section == LoadSection.Down)
+            this.DownRightQuad.CreateTerrainWithHeightMap(downRightNeighbor, downNeighbor, rightNeighbor, null, null);
 
-    private void onWorldGenUpdate(bool finished)
-    {
-        if (finished)
-        {
-            assingQuadPositions();
-            createWorldTileData(this.WorldGenManager.Specs, this.WorldGenManager.Layers);
-            this.BeginManagingWorld(this.SpawnPoint);
-        }
+        if (section == LoadSection.AllSides || section == LoadSection.Left || section == LoadSection.Down)
+            this.DownLeftQuad.CreateTerrainWithHeightMap(downLeftNeighbor, null, leftNeighbor, downNeighbor, null);
     }
 
     private void assingQuadPositions()

@@ -8,9 +8,7 @@ public static class ListExtensions
         for (int i = 0; i < self.Count; i++)
         {
             int randomIndex = Random.Range(i, self.Count);
-            T temp = self[i];
-            self[i] = self[randomIndex];
-            self[randomIndex] = temp;
+            self.Swap(i, randomIndex);
         }
     }
 
@@ -30,5 +28,47 @@ public static class ListExtensions
             return retVal;
         }
         return default(T);
+    }
+
+    public static void Swap<T>(this List<T> self, int first, int second)
+    {
+        T temp = self[first];
+        self[first] = self[second];
+        self[second] = temp;
+    }
+
+    /**
+     * Precondition: Only one occurrence of each element in list
+     */
+    public static void RemoveAllOptimized<T>(this List<T> self, List<T> toRemove)
+    {
+        int r, removed = 0;
+        bool remove = false;
+        for (int i = 0; i < self.Count - removed;)
+        {
+            remove = false;
+            for (r = removed; r < toRemove.Count; ++r)
+            {
+                if (self[i].Equals(toRemove[r]))
+                {
+                    remove = true;
+                    if (r != removed)
+                        toRemove.Swap(r, removed);
+                    ++removed;
+                    break;
+                }
+            }
+
+            if (remove)
+            {
+                self.Swap(i, self.Count - removed);
+                if (removed == toRemove.Count)
+                    break;
+            }
+            else
+                ++i;
+        }
+
+        self.RemoveRange(self.Count - removed, removed);
     }
 }
