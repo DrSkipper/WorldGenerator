@@ -179,17 +179,13 @@ public class TerrainManager : MonoBehaviour
 
     private void loadWorld(LoadSection section)
     {
-        WorldTileInfo me = _world[_center.X, _center.Y];
         int leftX = _center.X > 0 ? _center.X - 1 : _world.GetLength(0) - 1;
         int rightX = _center.X < _world.GetLength(0) - 1 ? _center.X + 1 : 0;
         int downY = _center.Y > 0 ? _center.Y - 1 : _world.GetLength(1) - 1;
         int upY = _center.Y < _world.GetLength(1) - 1 ? _center.Y + 1 : 0;
-
-        WorldTileInfo leftNeighbor = _world[leftX, _center.Y];
-        WorldTileInfo upNeighbor = _world[_center.X, upY];
-        WorldTileInfo rightNeighbor = _world[rightX, _center.Y];
-        WorldTileInfo downNeighbor = _world[_center.X, downY];
-
+        WorldTileInfo me = _world[_center.X, _center.Y];
+        WorldTileInfo leftNeighbor, upNeighbor, rightNeighbor, downNeighbor;
+        gatherNeighborReferences(_center.X, _center.Y, out leftNeighbor, out upNeighbor, out rightNeighbor, out downNeighbor);
         WorldTileInfo upperLeftNeighbor = _world[leftX, upY];
         WorldTileInfo upperRightNeighbor = _world[rightX, upY];
         WorldTileInfo downRightNeighbor = _world[rightX, downY];
@@ -198,50 +194,72 @@ public class TerrainManager : MonoBehaviour
         if (!me.TerrainInitialized)
             me.InitializeTerrain(this.WorldInfo, leftNeighbor, upNeighbor, rightNeighbor, downNeighbor);
 
-        if (!leftNeighbor.TerrainInitialized)
-            leftNeighbor.InitializeTerrain(this.WorldInfo, null, null, me, null);
-        if (!upNeighbor.TerrainInitialized)
-            upNeighbor.InitializeTerrain(this.WorldInfo, null, null, null, me);
-        if (!rightNeighbor.TerrainInitialized)
-            rightNeighbor.InitializeTerrain(this.WorldInfo, me, null, null, null);
-        if (!downNeighbor.TerrainInitialized)
-            downNeighbor.InitializeTerrain(this.WorldInfo, null, me, null, null);
+        guaranteeTerrainInitialization(leftNeighbor, leftX, _center.Y);
+        guaranteeTerrainInitialization(upNeighbor, _center.X, upY);
+        guaranteeTerrainInitialization(rightNeighbor, rightX, _center.X);
+        guaranteeTerrainInitialization(downNeighbor, _center.X, downY);
 
-        if (!upperLeftNeighbor.TerrainInitialized)
-            upperLeftNeighbor.InitializeTerrain(this.WorldInfo, null, null, upNeighbor, leftNeighbor);
-        if (!upperRightNeighbor.TerrainInitialized)
-            upperRightNeighbor.InitializeTerrain(this.WorldInfo, upNeighbor, null, null, rightNeighbor);
-        if (!downRightNeighbor.TerrainInitialized)
-            downRightNeighbor.InitializeTerrain(this.WorldInfo, downNeighbor, rightNeighbor, null, null);
-        if (!downLeftNeighbor.TerrainInitialized)
-            downLeftNeighbor.InitializeTerrain(this.WorldInfo, null, leftNeighbor, downNeighbor, null);
+        guaranteeTerrainInitialization(upperLeftNeighbor, leftX, upY);
+        guaranteeTerrainInitialization(upperRightNeighbor, rightX, upY);
+        guaranteeTerrainInitialization(downRightNeighbor, rightX, downY);
+        guaranteeTerrainInitialization(downLeftNeighbor, leftX, downY);
 
         if (section == LoadSection.AllSides)
-            this.MainQuad.CreateTerrainWithHeightMap(me, leftNeighbor, upNeighbor, rightNeighbor, downNeighbor);
+            createTerrain(this.MainQuad, me, _center.X, _center.Y);
 
         if (section == LoadSection.AllSides || section == LoadSection.Left)
-            this.LeftQuad.CreateTerrainWithHeightMap(leftNeighbor, null, null, me, null);
+            createTerrain(this.LeftQuad, leftNeighbor, leftX, _center.Y);
 
         if (section == LoadSection.AllSides || section == LoadSection.Up)
-            this.UpQuad.CreateTerrainWithHeightMap(upNeighbor, null, null, null, me);
+            createTerrain(this.UpQuad, upNeighbor, _center.X, upY);
 
         if (section == LoadSection.AllSides || section == LoadSection.Right)
-            this.RightQuad.CreateTerrainWithHeightMap(rightNeighbor, me, null, null, null);
+            createTerrain(this.RightQuad, rightNeighbor, rightX, _center.Y);
 
         if (section == LoadSection.AllSides || section == LoadSection.Down)
-            this.DownQuad.CreateTerrainWithHeightMap(downNeighbor, null, me, null, null);
+            createTerrain(this.DownQuad, downNeighbor, _center.X, downY);
 
         if (section == LoadSection.AllSides || section == LoadSection.Left || section == LoadSection.Up)
-            this.UpLeftQuad.CreateTerrainWithHeightMap(upperLeftNeighbor, null, null, upNeighbor, leftNeighbor);
+            createTerrain(this.UpLeftQuad, upperLeftNeighbor, leftX, upY);
 
         if (section == LoadSection.AllSides || section == LoadSection.Right || section == LoadSection.Up)
-            this.UpRightQuad.CreateTerrainWithHeightMap(upperRightNeighbor, upNeighbor, null, null, rightNeighbor);
+            createTerrain(this.UpRightQuad, upperRightNeighbor, rightX, upY);
 
         if (section == LoadSection.AllSides || section == LoadSection.Right || section == LoadSection.Down)
-            this.DownRightQuad.CreateTerrainWithHeightMap(downRightNeighbor, downNeighbor, rightNeighbor, null, null);
+            createTerrain(this.DownRightQuad, downRightNeighbor, rightX, downY);
 
         if (section == LoadSection.AllSides || section == LoadSection.Left || section == LoadSection.Down)
-            this.DownLeftQuad.CreateTerrainWithHeightMap(downLeftNeighbor, null, leftNeighbor, downNeighbor, null);
+            createTerrain(this.DownLeftQuad, downLeftNeighbor, leftX, downY);
+    }
+
+    private void guaranteeTerrainInitialization(WorldTileInfo tile, int x, int y)
+    {
+        if (!tile.TerrainInitialized)
+        {
+            WorldTileInfo leftNeighbor, upNeighbor, rightNeighbor, downNeighbor;
+            gatherNeighborReferences(x, y, out leftNeighbor, out upNeighbor, out rightNeighbor, out downNeighbor);
+            tile.InitializeTerrain(this.WorldInfo, leftNeighbor, upNeighbor, rightNeighbor, downNeighbor);
+        }
+    }
+
+    private void createTerrain(TerrainQuadRenderer quad, WorldTileInfo tile, int x, int y)
+    {
+        WorldTileInfo leftNeighbor, upNeighbor, rightNeighbor, downNeighbor;
+        gatherNeighborReferences(x, y, out leftNeighbor, out upNeighbor, out rightNeighbor, out downNeighbor);
+        quad.CreateTerrainWithHeightMap(tile, leftNeighbor, upNeighbor, rightNeighbor, downNeighbor);
+    }
+
+    private void gatherNeighborReferences(int x, int y, out WorldTileInfo leftNeighbor, out WorldTileInfo upNeighbor, out WorldTileInfo rightNeighbor, out WorldTileInfo downNeighbor)
+    {
+        int leftX = x > 0 ? x - 1 : _world.GetLength(0) - 1;
+        int rightX = x < _world.GetLength(0) - 1 ? x + 1 : 0;
+        int downY = y > 0 ? y - 1 : _world.GetLength(1) - 1;
+        int upY = y < _world.GetLength(1) - 1 ? y + 1 : 0;
+
+        leftNeighbor = _world[leftX, y];
+        upNeighbor = _world[x, upY];
+        rightNeighbor = _world[rightX, y];
+        downNeighbor = _world[x, downY];
     }
 
     private void assingQuadPositions()
