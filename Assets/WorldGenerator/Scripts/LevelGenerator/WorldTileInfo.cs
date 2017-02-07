@@ -114,7 +114,7 @@ public class WorldTileInfo
         }
 
         //TODO: handle different methods for distributing height
-        randomFill(this.Terrain, low, high);
+        perlinFill(this.Terrain, low, high);
         //TODO: Don't always fill with default terrain type, handle borders between regions, beaches around water, oasis tiles, etc
         simpleTypeSet(this.Terrain, this.GetTileType());
         //TODO: Add doodads like trees
@@ -141,9 +141,22 @@ public class WorldTileInfo
         }
     }
 
-    /**
-     * Private
-     */
+    private static void perlinFill(TerrainInfo[,] heightMap, int low, int high)
+    {
+        float rx = Random.Range(0, heightMap.GetLength(0));
+        float ry = Random.Range(0, heightMap.GetLength(1));
+        for (int x = 0; x < heightMap.GetLength(0); ++x)
+        {
+            for (int y = 0; y < heightMap.GetLength(1); ++y)
+            {
+                float p = Mathf.PerlinNoise(2 * (float)(x + rx % heightMap.GetLength(0)) / (float)heightMap.GetLength(0), 2 * (float)(y + ry % heightMap.GetLength(1)) / (float)heightMap.GetLength(1));
+                //if (Random.value < 0.33f) Debug.Log("p = " + p);
+                float h = p * (high - low) + low;
+                heightMap[x, y].Height = Mathf.RoundToInt(h);
+            }
+        }
+    }
+
     private static void simpleTypeSet(TerrainInfo[,] heightMap, TileType tileType)
     {
         TerrainInfo.TerrainType type = TerrainInfo.TerrainType.Plains;
