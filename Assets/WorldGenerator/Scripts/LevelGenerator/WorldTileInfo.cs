@@ -90,6 +90,8 @@ public class WorldTileInfo
 
         int low = worldInfo.SeaLevel;
         int high = worldInfo.SeaLevel;
+        float freq = 1.0f;
+        int pow = 1;
         switch (this.GetTileType())
         {
             default:
@@ -98,23 +100,31 @@ public class WorldTileInfo
             case TileType.Plains:
                 low = worldInfo.PlainsHeightRange.X;
                 high = worldInfo.PlainsHeightRange.Y;
+                freq = worldInfo.PlainsPerlinFrequency;
+                pow = worldInfo.PlainsPerlinPower;
                 break;
             case TileType.Desert:
                 low = worldInfo.DesertHeightRange.X;
                 high = worldInfo.DesertHeightRange.Y;
+                freq = worldInfo.DesertPerlinFrequency;
+                pow = worldInfo.DesertPerlinPower;
                 break;
             case TileType.Hills:
                 low = worldInfo.HillsHeightRange.X;
                 high = worldInfo.HillsHeightRange.Y;
+                freq = worldInfo.HillsPerlinFrequency;
+                pow = worldInfo.HillsPerlinPower;
                 break;
             case TileType.Mountains:
                 low = worldInfo.MountainsHeightRange.X;
                 high = worldInfo.MountainsHeightRange.Y;
+                freq = worldInfo.MountainsPerlinFrequency;
+                pow = worldInfo.MountainsPerlinPower;
                 break;
         }
 
         //TODO: handle different methods for distributing height
-        perlinFill(this.Terrain, low, high);
+        perlinFill(this.Terrain, low, high, freq, pow);
         //TODO: Don't always fill with default terrain type, handle borders between regions, beaches around water, oasis tiles, etc
         simpleTypeSet(this.Terrain, this.GetTileType());
         //TODO: Add doodads like trees
@@ -141,15 +151,15 @@ public class WorldTileInfo
         }
     }
 
-    private static void perlinFill(TerrainInfo[,] heightMap, int low, int high)
+    private static void perlinFill(TerrainInfo[,] heightMap, int low, int high, float freq, int pow)
     {
-        float rx = Random.Range(0, heightMap.GetLength(0));
-        float ry = Random.Range(0, heightMap.GetLength(1));
+        float rx = Random.Range(0, heightMap.GetLength(0) / 2.0f);
+        float ry = Random.Range(0, heightMap.GetLength(1) / 2.0f);
         for (int x = 0; x < heightMap.GetLength(0); ++x)
         {
             for (int y = 0; y < heightMap.GetLength(1); ++y)
             {
-                float p = Mathf.PerlinNoise(2 * (float)(x + rx % heightMap.GetLength(0)) / (float)heightMap.GetLength(0), 2 * (float)(y + ry % heightMap.GetLength(1)) / (float)heightMap.GetLength(1));
+                float p = Mathf.Pow(Mathf.PerlinNoise(freq * (float)(x + rx) / (float)heightMap.GetLength(0), freq * (float)(y + ry) / (float)heightMap.GetLength(1)), pow);
                 //if (Random.value < 0.33f) Debug.Log("p = " + p);
                 float h = p * (high - low) + low;
                 heightMap[x, y].Height = Mathf.RoundToInt(h);
