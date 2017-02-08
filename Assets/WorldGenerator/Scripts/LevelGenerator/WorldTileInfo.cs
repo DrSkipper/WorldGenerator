@@ -93,6 +93,95 @@ public class WorldTileInfo
         simpleTypeSet(this.Terrain, this.GetTileType());
         //TODO: Add doodads like trees
 
+        bool leftBorder = leftNeighbor.Type < this.Type;
+        bool upBorder = upNeighbor.Type < this.Type;
+        bool rightBorder = rightNeighbor.Type < this.Type;
+        bool downBorder = downNeighbor.Type < this.Type;
+
+        if (leftBorder)
+        {
+            if (upBorder)
+            {
+                
+            }
+            else
+            {
+
+            }
+
+            if (downBorder)
+            {
+
+            }
+            else
+            {
+
+            }
+        }
+
+        if (rightBorder)
+        {
+            if (upBorder)
+            {
+
+            }
+            else
+            {
+
+            }
+
+            if (downBorder)
+            {
+
+            }
+            else
+            {
+
+            }
+        }
+
+        if (downBorder)
+        {
+            if (leftBorder)
+            {
+
+            }
+            else
+            {
+
+            }
+
+            if (rightBorder)
+            {
+
+            }
+            else
+            {
+
+            }
+        }
+
+        if (upBorder)
+        {
+            if (leftBorder)
+            {
+
+            }
+            else
+            {
+
+            }
+
+            if (rightBorder)
+            {
+
+            }
+            else
+            {
+
+            }
+        }
+
         fillHeightMap(this.GetTileType(), this.Terrain, worldInfo);
     }
 
