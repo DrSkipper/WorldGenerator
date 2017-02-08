@@ -5,11 +5,11 @@ public class WorldTileInfo
 {
     public enum TileType
     {
-        Plains,
-        Hills,
-        Mountains,
-        Water,
-        Desert
+        Water = 0,
+        Plains = 1,
+        Desert = 2,
+        Hills = 3,
+        Mountains = 4
     }
 
     public enum TileTrait
@@ -88,46 +88,12 @@ public class WorldTileInfo
             for (int y = 0; y < worldInfo.QuadSize; ++y)
                 this.Terrain[x, y] = new TerrainInfo();
 
-        int low = worldInfo.SeaLevel;
-        int high = worldInfo.SeaLevel;
-        float freq = 1.0f;
-        int pow = 1;
-        switch (this.GetTileType())
-        {
-            default:
-            case TileType.Water:
-                break;
-            case TileType.Plains:
-                low = worldInfo.PlainsHeightRange.X;
-                high = worldInfo.PlainsHeightRange.Y;
-                freq = worldInfo.PlainsPerlinFrequency;
-                pow = worldInfo.PlainsPerlinPower;
-                break;
-            case TileType.Desert:
-                low = worldInfo.DesertHeightRange.X;
-                high = worldInfo.DesertHeightRange.Y;
-                freq = worldInfo.DesertPerlinFrequency;
-                pow = worldInfo.DesertPerlinPower;
-                break;
-            case TileType.Hills:
-                low = worldInfo.HillsHeightRange.X;
-                high = worldInfo.HillsHeightRange.Y;
-                freq = worldInfo.HillsPerlinFrequency;
-                pow = worldInfo.HillsPerlinPower;
-                break;
-            case TileType.Mountains:
-                low = worldInfo.MountainsHeightRange.X;
-                high = worldInfo.MountainsHeightRange.Y;
-                freq = worldInfo.MountainsPerlinFrequency;
-                pow = worldInfo.MountainsPerlinPower;
-                break;
-        }
 
-        //TODO: handle different methods for distributing height
-        perlinFill(this.Terrain, low, high, freq, worldInfo.FrequencyRange, pow);
         //TODO: Don't always fill with default terrain type, handle borders between regions, beaches around water, oasis tiles, etc
         simpleTypeSet(this.Terrain, this.GetTileType());
         //TODO: Add doodads like trees
+
+        fillHeightMap(this.GetTileType(), this.Terrain, worldInfo);
     }
 
     /**
@@ -140,6 +106,53 @@ public class WorldTileInfo
     /**
      * Private
      */
+    private static void fillHeightMap(TileType tileType, TerrainInfo[,] heightMap, WorldInfo worldInfo)
+    {
+        int low = worldInfo.SeaLevel;
+        int high = worldInfo.SeaLevel;
+        float freq = 1.0f;
+        int pow = 1;
+        TerrainInfo.TerrainType terrainType = TerrainInfo.TerrainType.Water;
+
+        switch (tileType)
+        {
+            default:
+            case TileType.Water:
+                break;
+            case TileType.Plains:
+                low = worldInfo.PlainsHeightRange.X;
+                high = worldInfo.PlainsHeightRange.Y;
+                freq = worldInfo.PlainsPerlinFrequency;
+                pow = worldInfo.PlainsPerlinPower;
+                terrainType = TerrainInfo.TerrainType.Plains;
+                break;
+            case TileType.Desert:
+                low = worldInfo.DesertHeightRange.X;
+                high = worldInfo.DesertHeightRange.Y;
+                freq = worldInfo.DesertPerlinFrequency;
+                pow = worldInfo.DesertPerlinPower;
+                terrainType = TerrainInfo.TerrainType.Desert;
+                break;
+            case TileType.Hills:
+                low = worldInfo.HillsHeightRange.X;
+                high = worldInfo.HillsHeightRange.Y;
+                freq = worldInfo.HillsPerlinFrequency;
+                pow = worldInfo.HillsPerlinPower;
+                terrainType = TerrainInfo.TerrainType.Hills;
+                break;
+            case TileType.Mountains:
+                low = worldInfo.MountainsHeightRange.X;
+                high = worldInfo.MountainsHeightRange.Y;
+                freq = worldInfo.MountainsPerlinFrequency;
+                pow = worldInfo.MountainsPerlinPower;
+                terrainType = TerrainInfo.TerrainType.Mountains;
+                break;
+        }
+
+        //TODO: handle different methods for distributing height
+        perlinFill(heightMap, terrainType, low, high, freq, worldInfo.FrequencyRange, pow);
+    }
+
     private static void randomFill(TerrainInfo[,] heightMap, int low, int high)
     {
         for (int x = 0; x < heightMap.GetLength(0); ++x)
@@ -151,7 +164,7 @@ public class WorldTileInfo
         }
     }
 
-    private static void perlinFill(TerrainInfo[,] heightMap, int low, int high, float freq, float freqRange, int pow)
+    private static void perlinFill(TerrainInfo[,] heightMap, TerrainInfo.TerrainType affectedType, int low, int high, float freq, float freqRange, int pow)
     {
         float rx = Random.Range(-heightMap.GetLength(0) / 4.0f, heightMap.GetLength(0) / 4.0f);
         float ry = Random.Range(-heightMap.GetLength(1) / 4.0f, heightMap.GetLength(1) / 4.0f);
@@ -163,6 +176,9 @@ public class WorldTileInfo
         {
             for (int y = 0; y < heightMap.GetLength(1); ++y)
             {
+                if (heightMap[x, y].Type != affectedType)
+                    continue;
+
                 float nx = flipX ? heightMap.GetLength(0) - x : x;
                 float ny = flipY ? heightMap.GetLength(1) - y : y;
                 float p = Mathf.Pow(Mathf.PerlinNoise(freq * (nx + rx) / (float)heightMap.GetLength(0), freq * (ny + ry) / (float)heightMap.GetLength(1)), pow);
