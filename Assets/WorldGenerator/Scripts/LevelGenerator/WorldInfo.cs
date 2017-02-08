@@ -18,4 +18,5 @@ public class WorldInfo : ScriptableObject
     public int DesertPerlinPower;
     public int HillsPerlinPower;
     public int MountainsPerlinPower;
+    public float FrequencyRange;
 }

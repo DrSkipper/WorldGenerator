@@ -124,7 +124,7 @@ public class WorldTileInfo
         }
 
         //TODO: handle different methods for distributing height
-        perlinFill(this.Terrain, low, high, freq, pow);
+        perlinFill(this.Terrain, low, high, freq, worldInfo.FrequencyRange, pow);
         //TODO: Don't always fill with default terrain type, handle borders between regions, beaches around water, oasis tiles, etc
         simpleTypeSet(this.Terrain, this.GetTileType());
         //TODO: Add doodads like trees
@@ -151,15 +151,21 @@ public class WorldTileInfo
         }
     }
 
-    private static void perlinFill(TerrainInfo[,] heightMap, int low, int high, float freq, int pow)
+    private static void perlinFill(TerrainInfo[,] heightMap, int low, int high, float freq, float freqRange, int pow)
     {
-        float rx = Random.Range(0, heightMap.GetLength(0) / 2.0f);
-        float ry = Random.Range(0, heightMap.GetLength(1) / 2.0f);
+        float rx = Random.Range(-heightMap.GetLength(0) / 4.0f, heightMap.GetLength(0) / 4.0f);
+        float ry = Random.Range(-heightMap.GetLength(1) / 4.0f, heightMap.GetLength(1) / 4.0f);
+        bool flipX = Random.value > 0.5f;
+        bool flipY = Random.value > 0.5f;
+        freq = Random.Range(freq - freq * freqRange, freq + freq * freqRange);
+
         for (int x = 0; x < heightMap.GetLength(0); ++x)
         {
             for (int y = 0; y < heightMap.GetLength(1); ++y)
             {
-                float p = Mathf.Pow(Mathf.PerlinNoise(freq * (float)(x + rx) / (float)heightMap.GetLength(0), freq * (float)(y + ry) / (float)heightMap.GetLength(1)), pow);
+                float nx = flipX ? heightMap.GetLength(0) - x : x;
+                float ny = flipY ? heightMap.GetLength(1) - y : y;
+                float p = Mathf.Pow(Mathf.PerlinNoise(freq * (nx + rx) / (float)heightMap.GetLength(0), freq * (ny + ry) / (float)heightMap.GetLength(1)), pow);
                 //if (Random.value < 0.33f) Debug.Log("p = " + p);
                 float h = p * (high - low) + low;
                 heightMap[x, y].Height = Mathf.RoundToInt(h);
