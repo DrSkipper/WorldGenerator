@@ -81,15 +81,14 @@ public class WorldTileInfo
         }
     }
 
-    public void InitializeTerrain(WorldInfo worldInfo, WorldTileInfo leftNeighbor, WorldTileInfo upNeighbor, WorldTileInfo rightNeighbor, WorldTileInfo downNeighbor)
+    public void InitializeTerrain(WorldInfo worldInfo, WorldTileInfo leftNeighbor, WorldTileInfo upNeighbor, WorldTileInfo rightNeighbor, WorldTileInfo downNeighbor, List<TerrainInfo.TerrainType> sharedTerrainList)
     {
         this.Terrain = new TerrainInfo[worldInfo.QuadSize, worldInfo.QuadSize];
         for (int x = 0; x < worldInfo.QuadSize; ++x)
             for (int y = 0; y < worldInfo.QuadSize; ++y)
                 this.Terrain[x, y] = new TerrainInfo();
 
-
-        //TODO: Don't always fill with default terrain type, handle borders between regions, beaches around water, oasis tiles, etc
+        //TODO: Allow for oasis tiles and stuff.
         simpleTypeSet(this.Terrain, this.GetTileType());
         //TODO: Add doodads like trees
 
@@ -98,91 +97,113 @@ public class WorldTileInfo
         bool rightBorder = rightNeighbor.Type < this.Type;
         bool downBorder = downNeighbor.Type < this.Type;
 
+        int borderIndent = Mathf.RoundToInt(worldInfo.BorderPercentage * worldInfo.QuadSize + .05f) - worldInfo.BorderRange / 2;
+        int farBorderIndent = worldInfo.QuadSize - 1 - borderIndent;
+
+        int mainLeftX = leftBorder ? borderIndent + Random.Range(0, worldInfo.BorderRange) : 0;
+        int mainUpY = upBorder ? farBorderIndent - Random.Range(0, worldInfo.BorderRange) : worldInfo.QuadSize - 1;
+        int mainRightX = rightBorder ? farBorderIndent - Random.Range(0, worldInfo.BorderRange) : worldInfo.QuadSize - 1;
+        int mainDownY = downBorder ? borderIndent + Random.Range(0, worldInfo.BorderRange) : 0;
+
+        //TODO: Handle corners
+        //TODO: Methodical randomness in border line
+        sharedTerrainList.Clear();
+        sharedTerrainList.Add(simpleTileSwap(this.GetTileType()));
+        bool beach = false;
+
         if (leftBorder)
         {
-            if (upBorder)
-            {
-                
-            }
-            else
-            {
+            TerrainInfo.TerrainType terrain = simpleTileSwap(leftNeighbor.GetTileType());
+            sharedTerrainList.Add(terrain);
 
-            }
-
-            if (downBorder)
+            for (int y = mainDownY; y <= mainUpY; ++y)
             {
+                for (int x = 0; x <= mainLeftX; ++x)
+                {
+                    this.Terrain[x, y].Type = terrain;
+                }
 
-            }
-            else
-            {
-
+                //TODO: Allow for things like beaches without hardcoded checks here
+                if (leftNeighbor.GetTileType() == TileType.Water && this.GetTileType() == TileType.Plains)
+                {
+                    beach = true;
+                    this.Terrain[mainLeftX, y].Type = TerrainInfo.TerrainType.Beach;
+                }
             }
         }
 
         if (rightBorder)
         {
-            if (upBorder)
+            TerrainInfo.TerrainType terrain = simpleTileSwap(rightNeighbor.GetTileType());
+            if (!sharedTerrainList.Contains(terrain))
+                sharedTerrainList.Add(terrain);
+
+            for (int y = mainDownY; y <= mainUpY; ++y)
             {
-
-            }
-            else
-            {
-
-            }
-
-            if (downBorder)
-            {
-
-            }
-            else
-            {
-
-            }
-        }
-
-        if (downBorder)
-        {
-            if (leftBorder)
-            {
-
-            }
-            else
-            {
-
-            }
-
-            if (rightBorder)
-            {
-
-            }
-            else
-            {
-
+                for (int x = mainRightX; x < worldInfo.QuadSize; ++x)
+                {
+                    this.Terrain[x, y].Type = terrain;
+                }
+                
+                if (rightNeighbor.GetTileType() == TileType.Water && this.GetTileType() == TileType.Plains)
+                {
+                    beach = true;
+                    this.Terrain[mainRightX, y].Type = TerrainInfo.TerrainType.Beach;
+                }
             }
         }
 
         if (upBorder)
         {
-            if (leftBorder)
+            TerrainInfo.TerrainType terrain = simpleTileSwap(upNeighbor.GetTileType());
+            if (!sharedTerrainList.Contains(terrain))
+                sharedTerrainList.Add(terrain);
+
+            for (int x = mainLeftX; x <= mainRightX; ++x)
             {
+                for (int y = mainUpY; y < worldInfo.QuadSize; ++y)
+                {
+                    this.Terrain[x, y].Type = terrain;
+                }
 
-            }
-            else
-            {
-
-            }
-
-            if (rightBorder)
-            {
-
-            }
-            else
-            {
-
+                if (upNeighbor.GetTileType() == TileType.Water && this.GetTileType() == TileType.Plains)
+                {
+                    beach = true;
+                    this.Terrain[x, mainUpY].Type = TerrainInfo.TerrainType.Beach;
+                }
             }
         }
 
-        fillHeightMap(this.GetTileType(), this.Terrain, worldInfo);
+        if (downBorder)
+        {
+            TerrainInfo.TerrainType terrain = simpleTileSwap(downNeighbor.GetTileType());
+            if (!sharedTerrainList.Contains(terrain))
+                sharedTerrainList.Add(terrain);
+
+            for (int x = mainLeftX; x <= mainRightX; ++x)
+            {
+                for (int y = 0; y <= mainDownY; ++y)
+                {
+                    this.Terrain[x, y].Type = terrain;
+                }
+
+                if (downNeighbor.GetTileType() == TileType.Water && this.GetTileType() == TileType.Plains)
+                {
+                    beach = true;
+                    this.Terrain[x, mainDownY].Type = TerrainInfo.TerrainType.Beach;
+                }
+            }
+        }
+
+        if (beach)
+            sharedTerrainList.Add(TerrainInfo.TerrainType.Beach);
+
+        for (int i = 0; i < sharedTerrainList.Count; ++i)
+        {
+            fillHeightMap(sharedTerrainList[i], this.Terrain, worldInfo);
+        }
+        sharedTerrainList.Clear();
+
     }
 
     /**
@@ -195,50 +216,12 @@ public class WorldTileInfo
     /**
      * Private
      */
-    private static void fillHeightMap(TileType tileType, TerrainInfo[,] heightMap, WorldInfo worldInfo)
+    private static void fillHeightMap(TerrainInfo.TerrainType terrainType, TerrainInfo[,] heightMap, WorldInfo worldInfo)
     {
-        int low = worldInfo.SeaLevel;
-        int high = worldInfo.SeaLevel;
-        float freq = 1.0f;
-        int pow = 1;
-        TerrainInfo.TerrainType terrainType = TerrainInfo.TerrainType.Water;
-
-        switch (tileType)
-        {
-            default:
-            case TileType.Water:
-                break;
-            case TileType.Plains:
-                low = worldInfo.PlainsHeightRange.X;
-                high = worldInfo.PlainsHeightRange.Y;
-                freq = worldInfo.PlainsPerlinFrequency;
-                pow = worldInfo.PlainsPerlinPower;
-                terrainType = TerrainInfo.TerrainType.Plains;
-                break;
-            case TileType.Desert:
-                low = worldInfo.DesertHeightRange.X;
-                high = worldInfo.DesertHeightRange.Y;
-                freq = worldInfo.DesertPerlinFrequency;
-                pow = worldInfo.DesertPerlinPower;
-                terrainType = TerrainInfo.TerrainType.Desert;
-                break;
-            case TileType.Hills:
-                low = worldInfo.HillsHeightRange.X;
-                high = worldInfo.HillsHeightRange.Y;
-                freq = worldInfo.HillsPerlinFrequency;
-                pow = worldInfo.HillsPerlinPower;
-                terrainType = TerrainInfo.TerrainType.Hills;
-                break;
-            case TileType.Mountains:
-                low = worldInfo.MountainsHeightRange.X;
-                high = worldInfo.MountainsHeightRange.Y;
-                freq = worldInfo.MountainsPerlinFrequency;
-                pow = worldInfo.MountainsPerlinPower;
-                terrainType = TerrainInfo.TerrainType.Mountains;
-                break;
-        }
-
         //TODO: handle different methods for distributing height
+        int low, high, pow;
+        float freq;
+        gatherFillInformation(terrainType, out low, out high, out freq, out pow, worldInfo);
         perlinFill(heightMap, terrainType, low, high, freq, worldInfo.FrequencyRange, pow);
     }
 
@@ -278,10 +261,66 @@ public class WorldTileInfo
         }
     }
 
+    private static void gatherFillInformation(TerrainInfo.TerrainType terrainType, out int low, out int high, out float freq, out int pow, WorldInfo worldInfo)
+    {
+        switch (terrainType)
+        {
+            default:
+            case TerrainInfo.TerrainType.Water:
+                low = worldInfo.SeaLevel;
+                high = worldInfo.SeaLevel;
+                freq = 1.0f;
+                pow = 1;
+                break;
+            case TerrainInfo.TerrainType.Beach:
+                low = worldInfo.BeachHeightRange.X;
+                high = worldInfo.BeachHeightRange.Y;
+                freq = worldInfo.BeachPerlinFrequency;
+                pow = worldInfo.BeachPerlinPower;
+                break;
+            case TerrainInfo.TerrainType.Plains:
+                low = worldInfo.PlainsHeightRange.X;
+                high = worldInfo.PlainsHeightRange.Y;
+                freq = worldInfo.PlainsPerlinFrequency;
+                pow = worldInfo.PlainsPerlinPower;
+                break;
+            case TerrainInfo.TerrainType.Desert:
+                low = worldInfo.DesertHeightRange.X;
+                high = worldInfo.DesertHeightRange.Y;
+                freq = worldInfo.DesertPerlinFrequency;
+                pow = worldInfo.DesertPerlinPower;
+                break;
+            case TerrainInfo.TerrainType.Hills:
+                low = worldInfo.HillsHeightRange.X;
+                high = worldInfo.HillsHeightRange.Y;
+                freq = worldInfo.HillsPerlinFrequency;
+                pow = worldInfo.HillsPerlinPower;
+                break;
+            case TerrainInfo.TerrainType.Mountains:
+                low = worldInfo.MountainsHeightRange.X;
+                high = worldInfo.MountainsHeightRange.Y;
+                freq = worldInfo.MountainsPerlinFrequency;
+                pow = worldInfo.MountainsPerlinPower;
+                break;
+        }
+    }
+
     private static void simpleTypeSet(TerrainInfo[,] heightMap, TileType tileType)
     {
-        TerrainInfo.TerrainType type = TerrainInfo.TerrainType.Plains;
+        TerrainInfo.TerrainType type = simpleTileSwap(tileType);
 
+        for (int x = 0; x < heightMap.GetLength(0); ++x)
+        {
+            for (int y = 0; y < heightMap.GetLength(1); ++y)
+            {
+                heightMap[x, y].Type = type;
+            }
+        }
+    }
+
+    private static TerrainInfo.TerrainType simpleTileSwap(TileType tileType)
+    {
+        TerrainInfo.TerrainType type = TerrainInfo.TerrainType.Plains;
         switch (tileType)
         {
             default:
@@ -300,13 +339,6 @@ public class WorldTileInfo
                 type = TerrainInfo.TerrainType.Desert;
                 break;
         }
-
-        for (int x = 0; x < heightMap.GetLength(0); ++x)
-        {
-            for (int y = 0; y < heightMap.GetLength(1); ++y)
-            {
-                heightMap[x, y].Type = type;
-            }
-        }
+        return type;
     }
 }

@@ -27,6 +27,7 @@ public class TerrainManager : MonoBehaviour
     {
         _halfQuadSize = this.WorldInfo.QuadSize * this.MainQuad.TileRenderSize / 2;
         _recenterObjects = new List<GameObject>();
+        _sharedTerrainList = new List<WorldTileInfo.TerrainInfo.TerrainType>();
         this.WorldGenManager.AddUpdateDelegate(onWorldGenUpdate);
     }
 
@@ -55,8 +56,9 @@ public class TerrainManager : MonoBehaviour
      */
     private WorldTileInfo[,] _world;
     private int _halfQuadSize;
-    List<GameObject> _recenterObjects;
-    IntegerVector _center;
+    private List<GameObject> _recenterObjects;
+    private IntegerVector _center;
+    private List<WorldTileInfo.TerrainInfo.TerrainType> _sharedTerrainList;
 
     private enum LoadSection
     {
@@ -192,11 +194,11 @@ public class TerrainManager : MonoBehaviour
         WorldTileInfo downLeftNeighbor = _world[leftX, downY];
 
         if (!me.TerrainInitialized)
-            me.InitializeTerrain(this.WorldInfo, leftNeighbor, upNeighbor, rightNeighbor, downNeighbor);
+            me.InitializeTerrain(this.WorldInfo, leftNeighbor, upNeighbor, rightNeighbor, downNeighbor, _sharedTerrainList);
 
         guaranteeTerrainInitialization(leftNeighbor, leftX, _center.Y);
         guaranteeTerrainInitialization(upNeighbor, _center.X, upY);
-        guaranteeTerrainInitialization(rightNeighbor, rightX, _center.X);
+        guaranteeTerrainInitialization(rightNeighbor, rightX, _center.Y);
         guaranteeTerrainInitialization(downNeighbor, _center.X, downY);
 
         guaranteeTerrainInitialization(upperLeftNeighbor, leftX, upY);
@@ -238,7 +240,7 @@ public class TerrainManager : MonoBehaviour
         {
             WorldTileInfo leftNeighbor, upNeighbor, rightNeighbor, downNeighbor;
             gatherNeighborReferences(x, y, out leftNeighbor, out upNeighbor, out rightNeighbor, out downNeighbor);
-            tile.InitializeTerrain(this.WorldInfo, leftNeighbor, upNeighbor, rightNeighbor, downNeighbor);
+            tile.InitializeTerrain(this.WorldInfo, leftNeighbor, upNeighbor, rightNeighbor, downNeighbor, _sharedTerrainList);
         }
     }
 
