@@ -104,8 +104,7 @@ public class WorldTileInfo
         int mainUpY = upBorder ? farBorderIndent - Random.Range(0, worldInfo.BorderRange) : worldInfo.QuadSize - 1;
         int mainRightX = rightBorder ? farBorderIndent - Random.Range(0, worldInfo.BorderRange) : worldInfo.QuadSize - 1;
         int mainDownY = downBorder ? borderIndent + Random.Range(0, worldInfo.BorderRange) : 0;
-
-        //TODO: Handle corners
+        
         //TODO: Methodical randomness in border line
         sharedTerrainList.Clear();
         sharedTerrainList.Add(simpleTileSwap(this.GetTileType()));
