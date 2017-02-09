@@ -116,7 +116,11 @@ public class WorldTileInfo
             TerrainInfo.TerrainType terrain = simpleTileSwap(leftNeighbor.GetTileType());
             sharedTerrainList.Add(terrain);
 
-            for (int y = mainDownY; y <= mainUpY; ++y)
+            // Handle corner artifacts
+            int startY = downBorder && leftNeighbor.Type <= downNeighbor.Type ? 0 : mainDownY;
+            int endY = upBorder && leftNeighbor.Type <= upNeighbor.Type ? worldInfo.QuadSize - 1 : mainUpY;
+
+            for (int y = startY; y <= endY; ++y)
             {
                 for (int x = 0; x <= mainLeftX; ++x)
                 {
@@ -138,7 +142,10 @@ public class WorldTileInfo
             if (!sharedTerrainList.Contains(terrain))
                 sharedTerrainList.Add(terrain);
 
-            for (int y = mainDownY; y <= mainUpY; ++y)
+            int startY = downBorder && rightNeighbor.Type <= downNeighbor.Type ? 0 : mainDownY;
+            int endY = upBorder && rightNeighbor.Type <= upNeighbor.Type ? worldInfo.QuadSize - 1 : mainUpY;
+
+            for (int y = startY; y <= endY; ++y)
             {
                 for (int x = mainRightX; x < worldInfo.QuadSize; ++x)
                 {
@@ -159,7 +166,10 @@ public class WorldTileInfo
             if (!sharedTerrainList.Contains(terrain))
                 sharedTerrainList.Add(terrain);
 
-            for (int x = mainLeftX; x <= mainRightX; ++x)
+            int startX = leftBorder && upNeighbor.Type < leftNeighbor.Type ? 0 : mainLeftX;
+            int endX = rightBorder && upNeighbor.Type < rightNeighbor.Type ? worldInfo.QuadSize - 1 : mainUpY;
+
+            for (int x = startX; x <= endX; ++x)
             {
                 for (int y = mainUpY; y < worldInfo.QuadSize; ++y)
                 {
@@ -180,7 +190,10 @@ public class WorldTileInfo
             if (!sharedTerrainList.Contains(terrain))
                 sharedTerrainList.Add(terrain);
 
-            for (int x = mainLeftX; x <= mainRightX; ++x)
+            int startX = leftBorder && downNeighbor.Type < leftNeighbor.Type ? 0 : mainLeftX;
+            int endX = rightBorder && downNeighbor.Type < rightNeighbor.Type ? worldInfo.QuadSize - 1 : mainUpY;
+
+            for (int x = startX; x <= endX; ++x)
             {
                 for (int y = 0; y <= mainDownY; ++y)
                 {
