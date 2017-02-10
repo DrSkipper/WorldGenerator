@@ -24,4 +24,6 @@ public class WorldInfo : ScriptableObject
     public float FrequencyRange;
     public float BorderPercentage;
     public int BorderRange;
+    public float BorderFrequency;
+    public float KeepCornerChance;
 }

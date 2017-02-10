@@ -116,12 +116,15 @@ public class WorldTileInfo
             sharedTerrainList.Add(terrain);
 
             // Handle corner artifacts
-            int startY = downBorder && leftNeighbor.Type <= downNeighbor.Type ? 0 : mainDownY;
-            int endY = upBorder && leftNeighbor.Type <= upNeighbor.Type ? worldInfo.QuadSize - 1 : mainUpY;
+            int startY = downBorder && leftNeighbor.Type <= downNeighbor.Type && Random.value >= worldInfo.KeepCornerChance ? 0 : mainDownY;
+            int endY = upBorder && leftNeighbor.Type <= upNeighbor.Type && Random.value >= worldInfo.KeepCornerChance ? worldInfo.QuadSize - 1 : mainUpY;
 
             for (int y = startY; y <= endY; ++y)
             {
-                for (int x = 0; x <= mainLeftX; ++x)
+                // Allow for uneven borders
+                int endX = y == startY || y == endY ? mainLeftX : borderIndent + Mathf.RoundToInt(Mathf.PerlinNoise(worldInfo.BorderFrequency * mainLeftX / worldInfo.QuadSize, worldInfo.BorderFrequency * y / worldInfo.QuadSize) * worldInfo.BorderRange);
+
+                for (int x = 0; x <= endX; ++x)
                 {
                     this.Terrain[x, y].Type = terrain;
                 }
@@ -130,7 +133,7 @@ public class WorldTileInfo
                 if (leftNeighbor.GetTileType() == TileType.Water && this.GetTileType() == TileType.Plains)
                 {
                     beach = true;
-                    this.Terrain[mainLeftX, y].Type = TerrainInfo.TerrainType.Beach;
+                    this.Terrain[endX, y].Type = TerrainInfo.TerrainType.Beach;
                 }
             }
         }
@@ -141,12 +144,14 @@ public class WorldTileInfo
             if (!sharedTerrainList.Contains(terrain))
                 sharedTerrainList.Add(terrain);
 
-            int startY = downBorder && rightNeighbor.Type <= downNeighbor.Type ? 0 : mainDownY;
-            int endY = upBorder && rightNeighbor.Type <= upNeighbor.Type ? worldInfo.QuadSize - 1 : mainUpY;
+            int startY = downBorder && rightNeighbor.Type <= downNeighbor.Type && Random.value >= worldInfo.KeepCornerChance ? 0 : mainDownY;
+            int endY = upBorder && rightNeighbor.Type <= upNeighbor.Type && Random.value >= worldInfo.KeepCornerChance ? worldInfo.QuadSize - 1 : mainUpY;
 
             for (int y = startY; y <= endY; ++y)
             {
-                for (int x = mainRightX; x < worldInfo.QuadSize; ++x)
+                int startX = y == startY || y == endY ? mainRightX : farBorderIndent - Mathf.RoundToInt(Mathf.PerlinNoise(worldInfo.BorderFrequency * mainRightX / worldInfo.QuadSize, worldInfo.BorderFrequency * y / worldInfo.QuadSize) * worldInfo.BorderRange);
+
+                for (int x = startX; x < worldInfo.QuadSize; ++x)
                 {
                     this.Terrain[x, y].Type = terrain;
                 }
@@ -154,7 +159,7 @@ public class WorldTileInfo
                 if (rightNeighbor.GetTileType() == TileType.Water && this.GetTileType() == TileType.Plains)
                 {
                     beach = true;
-                    this.Terrain[mainRightX, y].Type = TerrainInfo.TerrainType.Beach;
+                    this.Terrain[startX, y].Type = TerrainInfo.TerrainType.Beach;
                 }
             }
         }
@@ -165,12 +170,14 @@ public class WorldTileInfo
             if (!sharedTerrainList.Contains(terrain))
                 sharedTerrainList.Add(terrain);
 
-            int startX = leftBorder && upNeighbor.Type < leftNeighbor.Type ? 0 : mainLeftX;
-            int endX = rightBorder && upNeighbor.Type < rightNeighbor.Type ? worldInfo.QuadSize - 1 : mainUpY;
+            int startX = leftBorder && upNeighbor.Type < leftNeighbor.Type && Random.value >= worldInfo.KeepCornerChance ? 0 : mainLeftX;
+            int endX = rightBorder && upNeighbor.Type < rightNeighbor.Type && Random.value >= worldInfo.KeepCornerChance ? worldInfo.QuadSize - 1 : mainRightX;
 
             for (int x = startX; x <= endX; ++x)
             {
-                for (int y = mainUpY; y < worldInfo.QuadSize; ++y)
+                int startY = x == startX || x == endX ? mainUpY : farBorderIndent - Mathf.RoundToInt(Mathf.PerlinNoise(worldInfo.BorderFrequency * x / worldInfo.QuadSize, worldInfo.BorderFrequency * mainUpY / worldInfo.QuadSize) * worldInfo.BorderRange);
+
+                for (int y = startY; y < worldInfo.QuadSize; ++y)
                 {
                     this.Terrain[x, y].Type = terrain;
                 }
@@ -178,7 +185,7 @@ public class WorldTileInfo
                 if (upNeighbor.GetTileType() == TileType.Water && this.GetTileType() == TileType.Plains)
                 {
                     beach = true;
-                    this.Terrain[x, mainUpY].Type = TerrainInfo.TerrainType.Beach;
+                    this.Terrain[x, startY].Type = TerrainInfo.TerrainType.Beach;
                 }
             }
         }
@@ -189,12 +196,14 @@ public class WorldTileInfo
             if (!sharedTerrainList.Contains(terrain))
                 sharedTerrainList.Add(terrain);
 
-            int startX = leftBorder && downNeighbor.Type < leftNeighbor.Type ? 0 : mainLeftX;
-            int endX = rightBorder && downNeighbor.Type < rightNeighbor.Type ? worldInfo.QuadSize - 1 : mainUpY;
+            int startX = leftBorder && downNeighbor.Type < leftNeighbor.Type && Random.value >= worldInfo.KeepCornerChance ? 0 : mainLeftX;
+            int endX = rightBorder && downNeighbor.Type < rightNeighbor.Type && Random.value >= worldInfo.KeepCornerChance ? worldInfo.QuadSize - 1 : mainRightX;
 
             for (int x = startX; x <= endX; ++x)
             {
-                for (int y = 0; y <= mainDownY; ++y)
+                int endY = x == startX || x == endX ? mainDownY : borderIndent + Mathf.RoundToInt(Mathf.PerlinNoise(worldInfo.BorderFrequency * x / worldInfo.QuadSize, worldInfo.BorderFrequency * mainDownY / worldInfo.QuadSize) * worldInfo.BorderRange);
+
+                for (int y = 0; y <= endY; ++y)
                 {
                     this.Terrain[x, y].Type = terrain;
                 }
@@ -202,7 +211,7 @@ public class WorldTileInfo
                 if (downNeighbor.GetTileType() == TileType.Water && this.GetTileType() == TileType.Plains)
                 {
                     beach = true;
-                    this.Terrain[x, mainDownY].Type = TerrainInfo.TerrainType.Beach;
+                    this.Terrain[x, endY].Type = TerrainInfo.TerrainType.Beach;
                 }
             }
         }
