@@ -280,7 +280,7 @@ public class WorldTileInfo
                 for (int y = 0; y < this.Terrain.GetLength(1); ++y)
                 {
                     float p = Mathf.PerlinNoise(2.0f * x / this.Terrain.GetLength(0), 2.0f * y / this.Terrain.GetLength(1));
-                    float r = 0.3f + p * 0.7f;
+                    float r = 0.05f + p * 0.6f;
                     if (Random.value < r)
                     {
                         addFeature(TerrainFeature.PineTree, x, y);

@@ -23,11 +23,14 @@ public class TerrainManager : MonoBehaviour
     public int ExtraBounds = 10;
     public List<GameObject> IgnoreRecenter;
 
+    public PooledObject PineTreePrefab;
+
     void Start()
     {
         _halfQuadSize = this.WorldInfo.QuadSize * this.MainQuad.TileRenderSize / 2;
         _recenterObjects = new List<GameObject>();
         _sharedTerrainList = new List<WorldTileInfo.TerrainInfo.TerrainType>();
+        _loadedFeatures = new List<PooledObject>();
         this.WorldGenManager.AddUpdateDelegate(onWorldGenUpdate);
     }
 
@@ -59,6 +62,7 @@ public class TerrainManager : MonoBehaviour
     private List<GameObject> _recenterObjects;
     private IntegerVector _center;
     private List<WorldTileInfo.TerrainInfo.TerrainType> _sharedTerrainList;
+    private List<PooledObject> _loadedFeatures;
 
     private enum LoadSection
     {
@@ -249,6 +253,26 @@ public class TerrainManager : MonoBehaviour
         WorldTileInfo leftNeighbor, upNeighbor, rightNeighbor, downNeighbor;
         gatherNeighborReferences(x, y, out leftNeighbor, out upNeighbor, out rightNeighbor, out downNeighbor);
         quad.CreateTerrainWithHeightMap(tile, leftNeighbor, upNeighbor, rightNeighbor, downNeighbor);
+
+        for (int i = 0; i < tile.NumFeatures; ++i)
+        {
+            WorldTileInfo.FeatureEntry entry = tile.GetFeature(i);
+            PooledObject feature = null;
+            switch (entry.FeatureType)
+            {
+                default:
+                    break;
+                case WorldTileInfo.TerrainFeature.PineTree:
+                    feature = this.PineTreePrefab.Retain();
+                    break;
+            }
+
+            if (feature != null)
+            {
+                feature.transform.SetPosition(quad.transform.position.x + (entry.TilePosition.X - this.WorldInfo.QuadSize / 2) * quad.TileRenderSize + quad.TileRenderSize / 2, tile.Terrain[entry.TilePosition.X, entry.TilePosition.Y].Height * quad.TileRenderSize, quad.transform.position.y + (entry.TilePosition.Y - this.WorldInfo.QuadSize / 2) * quad.TileRenderSize + quad.TileRenderSize / 2);
+                _loadedFeatures.Add(feature);
+            }
+        }
     }
 
     private void gatherNeighborReferences(int x, int y, out WorldTileInfo leftNeighbor, out WorldTileInfo upNeighbor, out WorldTileInfo rightNeighbor, out WorldTileInfo downNeighbor)
