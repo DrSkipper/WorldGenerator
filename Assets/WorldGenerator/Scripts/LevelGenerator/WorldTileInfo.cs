@@ -33,13 +33,28 @@ public class WorldTileInfo
 
         public TerrainType Type;
         public int Height;
-        //TODO - doodads - trees etc
+    }
+
+    public enum TerrainFeature
+    {
+        Rock,
+        Mineral,
+        NormalTree,
+        PineTree
+    }
+
+    public struct FeatureEntry
+    {
+        //TODO: Id for entry, to make sure don't respawn if destroyed
+        public TerrainFeature FeatureType;
+        public IntegerVector TilePosition;
     }
 
     public TileType GetTileType() { return (TileType)this.Type; }
     public void SetTileType(TileType type) { this.Type = (int)type; }
     public int NumTraits { get { return this.Traits == null ? 0 : this.Traits.Count; } }
     public bool TerrainInitialized { get { return this.Terrain != null; } }
+    public int NumFeatures { get { return this.Features == null ? 0 : this.Features.Count; } }
 
     public WorldTileInfo(TileType tileType)
     {
@@ -81,6 +96,11 @@ public class WorldTileInfo
         }
     }
 
+    public FeatureEntry GetFeature(int index)
+    {
+        return this.Features[index];
+    }
+
     public void InitializeTerrain(WorldInfo worldInfo, WorldTileInfo leftNeighbor, WorldTileInfo upNeighbor, WorldTileInfo rightNeighbor, WorldTileInfo downNeighbor, List<TerrainInfo.TerrainType> sharedTerrainList)
     {
         this.Terrain = new TerrainInfo[worldInfo.QuadSize, worldInfo.QuadSize];
@@ -90,7 +110,6 @@ public class WorldTileInfo
 
         //TODO: Allow for oasis tiles and stuff.
         simpleTypeSet(this.Terrain, this.GetTileType());
-        //TODO: Add doodads like trees
 
         bool leftBorder = leftNeighbor.Type < this.Type;
         bool upBorder = upNeighbor.Type < this.Type;
@@ -223,8 +242,9 @@ public class WorldTileInfo
         {
             fillHeightMap(sharedTerrainList[i], this.Terrain, worldInfo);
         }
-        sharedTerrainList.Clear();
 
+        createFeatureEntries();
+        sharedTerrainList.Clear();
     }
 
     /**
@@ -233,10 +253,43 @@ public class WorldTileInfo
     public int Type;
     public List<int> Traits;
     public TerrainInfo[,] Terrain;
+    public List<FeatureEntry> Features;
 
     /**
      * Private
      */
+    private void addFeature(TerrainFeature featureType, int x, int y)
+    {
+        if (this.Features == null)
+            this.Features = new List<FeatureEntry>();
+
+        FeatureEntry entry = new FeatureEntry();
+        entry.FeatureType = featureType;
+        entry.TilePosition = new IntegerVector(x, y);
+        this.Features.Add(entry);
+    }
+
+    private void createFeatureEntries()
+    {
+        //TODO: map features to traits without hardcoding
+        //TODO: magic numbers should be world info params
+        if (this.HasTrait(TileTrait.Forest))
+        {
+            for (int x = 0; x < this.Terrain.GetLength(0); ++x)
+            {
+                for (int y = 0; y < this.Terrain.GetLength(1); ++y)
+                {
+                    float p = Mathf.PerlinNoise(2.0f * x / this.Terrain.GetLength(0), 2.0f * y / this.Terrain.GetLength(1));
+                    float r = 0.3f + p * 0.7f;
+                    if (Random.value < r)
+                    {
+                        addFeature(TerrainFeature.PineTree, x, y);
+                    }
+                }
+            }
+        }
+    }
+
     private static void fillHeightMap(TerrainInfo.TerrainType terrainType, TerrainInfo[,] heightMap, WorldInfo worldInfo)
     {
         //TODO: handle different methods for distributing height
