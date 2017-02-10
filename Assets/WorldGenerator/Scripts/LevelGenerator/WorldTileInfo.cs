@@ -105,10 +105,8 @@ public class WorldTileInfo
         int mainRightX = rightBorder ? farBorderIndent - Random.Range(0, worldInfo.BorderRange) : worldInfo.QuadSize - 1;
         int mainDownY = downBorder ? borderIndent + Random.Range(0, worldInfo.BorderRange) : 0;
         
-        //TODO: Methodical randomness in border line
         sharedTerrainList.Clear();
         sharedTerrainList.Add(simpleTileSwap(this.GetTileType()));
-        bool beach = false;
 
         if (leftBorder)
         {
@@ -127,13 +125,6 @@ public class WorldTileInfo
                 for (int x = 0; x <= endX; ++x)
                 {
                     this.Terrain[x, y].Type = terrain;
-                }
-
-                //TODO: Allow for things like beaches without hardcoded checks here
-                if (leftNeighbor.GetTileType() == TileType.Water && this.GetTileType() == TileType.Plains)
-                {
-                    beach = true;
-                    this.Terrain[endX, y].Type = TerrainInfo.TerrainType.Beach;
                 }
             }
         }
@@ -155,12 +146,6 @@ public class WorldTileInfo
                 {
                     this.Terrain[x, y].Type = terrain;
                 }
-                
-                if (rightNeighbor.GetTileType() == TileType.Water && this.GetTileType() == TileType.Plains)
-                {
-                    beach = true;
-                    this.Terrain[startX, y].Type = TerrainInfo.TerrainType.Beach;
-                }
             }
         }
 
@@ -180,12 +165,6 @@ public class WorldTileInfo
                 for (int y = startY; y < worldInfo.QuadSize; ++y)
                 {
                     this.Terrain[x, y].Type = terrain;
-                }
-
-                if (upNeighbor.GetTileType() == TileType.Water && this.GetTileType() == TileType.Plains)
-                {
-                    beach = true;
-                    this.Terrain[x, startY].Type = TerrainInfo.TerrainType.Beach;
                 }
             }
         }
@@ -207,11 +186,32 @@ public class WorldTileInfo
                 {
                     this.Terrain[x, y].Type = terrain;
                 }
+            }
+        }
 
-                if (downNeighbor.GetTileType() == TileType.Water && this.GetTileType() == TileType.Plains)
+        //TODO: Allow for things like beaches without hardcoded checks here
+        bool beach = false;
+        if (this.GetTileType() == TileType.Plains || (this.GetTileType() == TileType.Water && leftBorder || rightBorder || upBorder || downBorder))
+        {
+            for (int x = 0; x < worldInfo.QuadSize; ++x)
+            {
+                for (int y = 0; y < worldInfo.QuadSize; ++y)
                 {
-                    beach = true;
-                    this.Terrain[x, endY].Type = TerrainInfo.TerrainType.Beach;
+                    if (this.Terrain[x, y].Type == TerrainInfo.TerrainType.Water)
+                    {
+                        if ((x > 0 && this.Terrain[x - 1, y].Type == TerrainInfo.TerrainType.Plains) ||
+                            (y > 0 && this.Terrain[x, y - 1].Type == TerrainInfo.TerrainType.Plains) ||
+                            (x < worldInfo.QuadSize - 1 && this.Terrain[x + 1, y].Type == TerrainInfo.TerrainType.Plains) ||
+                            (y < worldInfo.QuadSize - 1 && this.Terrain[x, y + 1].Type == TerrainInfo.TerrainType.Plains) ||
+                            (x > 0 && y > 0 && this.Terrain[x - 1, y - 1].Type == TerrainInfo.TerrainType.Plains) ||
+                            (x > 0 && y < worldInfo.QuadSize - 1 && this.Terrain[x - 1, y + 1].Type == TerrainInfo.TerrainType.Plains) ||
+                            (x < worldInfo.QuadSize - 1 && y > 0 && this.Terrain[x + 1, y - 1].Type == TerrainInfo.TerrainType.Plains) ||
+                            (x < worldInfo.QuadSize - 1 && y < worldInfo.QuadSize - 1 && this.Terrain[x + 1, y + 1].Type == TerrainInfo.TerrainType.Plains))
+                        {
+                            this.Terrain[x, y].Type = TerrainInfo.TerrainType.Beach;
+                            beach = true;
+                        }
+                    }
                 }
             }
         }
