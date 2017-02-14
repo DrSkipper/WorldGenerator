@@ -243,7 +243,7 @@ public class WorldTileInfo
             fillHeightMap(sharedTerrainList[i], this.Terrain, worldInfo);
         }
 
-        createFeatureEntries();
+        createFeatureEntries(heightDebugTerrain);
         sharedTerrainList.Clear();
 
         if (heightDebugTerrain)
@@ -272,20 +272,21 @@ public class WorldTileInfo
         this.Features.Add(entry);
     }
 
-    private void createFeatureEntries()
+    private void createFeatureEntries(bool debugHeight)
     {
         //TODO: map features to traits without hardcoding
         //TODO: magic numbers should be world info params
+
         if (this.HasTrait(TileTrait.Forest))
         {
             for (int x = 0; x < this.Terrain.GetLength(0); ++x)
             {
                 for (int y = 0; y < this.Terrain.GetLength(1); ++y)
                 {
-                    if (this.Terrain[x, y].Type != TerrainInfo.TerrainType.Water && (this.Terrain[x, y].Height == 2))
+                    if (this.Terrain[x, y].Type != TerrainInfo.TerrainType.Water && this.Terrain[x, y].Type != TerrainInfo.TerrainType.Beach && (!debugHeight || this.Terrain[x, y].Height == 2))
                     {
                         float p = Mathf.PerlinNoise(2.0f * x / this.Terrain.GetLength(0), 2.0f * y / this.Terrain.GetLength(1));
-                        float r = 0.7f + p * 0.3f;
+                        float r = 0.05f + p * 0.6f;
                         if (Random.value < r)
                         {
                             addFeature(TerrainFeature.PineTree, x, y);
