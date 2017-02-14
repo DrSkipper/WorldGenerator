@@ -308,13 +308,16 @@ public class WorldTileInfo
         Vector2 pos = new Vector2(xPercent, yPercent);
         Vector2 mid = new Vector2(0.5f, 0.5f);
         
+        if ((!leftNeighbor && xPercent < 0.5f) || (!rightNeighbor && xPercent > 0.5f))
         {
             if ((!upNeighbor && yPercent > 0.5f) || (!downNeighbor && yPercent < 0.5f))
                 return (SQRT_HALF - Vector2.Distance(pos, mid)) / SQRT_HALF;
             else
+                return (0.5f - Mathf.Abs(xPercent - 0.5f)) / 0.5f;
         }
         else if ((!upNeighbor && yPercent > 0.5f) || (!downNeighbor && yPercent < 0.5f))
         {
+            return (0.5f - Mathf.Abs(yPercent - 0.5f)) / 0.5f;
         }
         else
         {
