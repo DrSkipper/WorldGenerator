@@ -123,7 +123,7 @@ public class WorldTileInfo
         int mainUpY = upBorder ? farBorderIndent - Random.Range(0, worldInfo.BorderRange) : worldInfo.QuadSize - 1;
         int mainRightX = rightBorder ? farBorderIndent - Random.Range(0, worldInfo.BorderRange) : worldInfo.QuadSize - 1;
         int mainDownY = downBorder ? borderIndent + Random.Range(0, worldInfo.BorderRange) : 0;
-        
+
         sharedTerrainList.Clear();
         sharedTerrainList.Add(simpleTileSwap(this.GetTileType()));
 
@@ -243,7 +243,7 @@ public class WorldTileInfo
             fillHeightMap(sharedTerrainList[i], this.Terrain, worldInfo);
         }
 
-        createFeatureEntries(heightDebugTerrain);
+        createFeatureEntries(heightDebugTerrain, leftNeighbor, upNeighbor, rightNeighbor, downNeighbor);
         sharedTerrainList.Clear();
 
         if (heightDebugTerrain)
@@ -261,6 +261,8 @@ public class WorldTileInfo
     /**
      * Private
      */
+    private const float SQRT_HALF = 0.7071f;
+
     private void addFeature(TerrainFeature featureType, int x, int y)
     {
         if (this.Features == null)
@@ -272,13 +274,17 @@ public class WorldTileInfo
         this.Features.Add(entry);
     }
 
-    private void createFeatureEntries(bool debugHeight)
+    private void createFeatureEntries(bool debugHeight, WorldTileInfo leftNeighbor, WorldTileInfo upNeighbor, WorldTileInfo rightNeighbor, WorldTileInfo downNeighbor)
     {
         //TODO: map features to traits without hardcoding
         //TODO: magic numbers should be world info params
-
         if (this.HasTrait(TileTrait.Forest))
         {
+            bool left = leftNeighbor.HasTrait(TileTrait.Forest);
+            bool up = upNeighbor.HasTrait(TileTrait.Forest);
+            bool right = rightNeighbor.HasTrait(TileTrait.Forest);
+            bool down = downNeighbor.HasTrait(TileTrait.Forest);
+
             for (int x = 0; x < this.Terrain.GetLength(0); ++x)
             {
                 for (int y = 0; y < this.Terrain.GetLength(1); ++y)
@@ -286,7 +292,7 @@ public class WorldTileInfo
                     if (this.Terrain[x, y].Type != TerrainInfo.TerrainType.Water && this.Terrain[x, y].Type != TerrainInfo.TerrainType.Beach && (!debugHeight || this.Terrain[x, y].Height == 2))
                     {
                         float p = Mathf.PerlinNoise(2.0f * x / this.Terrain.GetLength(0), 2.0f * y / this.Terrain.GetLength(1));
-                        float r = 0.05f + p * 0.6f;
+                        float r = (0.05f + p * 0.6f) * getFeatureChanceMultiplier(left, up, right, down, (float)x / this.Terrain.GetLength(0), (float)y / this.Terrain.GetLength(1));
                         if (Random.value < r)
                         {
                             addFeature(TerrainFeature.PineTree, x, y);
@@ -294,6 +300,25 @@ public class WorldTileInfo
                     }
                 }
             }
+        }
+    }
+
+    private static float getFeatureChanceMultiplier(bool leftNeighbor, bool upNeighbor, bool rightNeighbor, bool downNeighbor, float xPercent, float yPercent)
+    {
+        Vector2 pos = new Vector2(xPercent, yPercent);
+        Vector2 mid = new Vector2(0.5f, 0.5f);
+        
+        {
+            if ((!upNeighbor && yPercent > 0.5f) || (!downNeighbor && yPercent < 0.5f))
+                return (SQRT_HALF - Vector2.Distance(pos, mid)) / SQRT_HALF;
+            else
+        }
+        else if ((!upNeighbor && yPercent > 0.5f) || (!downNeighbor && yPercent < 0.5f))
+        {
+        }
+        else
+        {
+            return 1.0f;
         }
     }
 
