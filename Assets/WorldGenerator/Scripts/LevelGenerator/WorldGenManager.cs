@@ -128,6 +128,7 @@ public class WorldGenManager : MonoBehaviour
         {
             LevelGenMap map = Instantiate<LevelGenMap>(_currentLayer == 0 ? this.Layer1Prefab : this.Layer2EtcPrefab);
             map.Reset();
+            map.transform.SetLocalPosition(this.transform.position.x, this.transform.position.y, this.transform.position.z);
             map.Width = _specs.MapSize.X;
             map.Height = _specs.MapSize.Y;
             map.FillCompletely(LevelGenMap.TileType.A);
