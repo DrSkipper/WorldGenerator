@@ -101,7 +101,7 @@ public class WorldTileInfo
         return this.Features[index];
     }
 
-    public void InitializeTerrain(WorldInfo worldInfo, WorldTileInfo leftNeighbor, WorldTileInfo upNeighbor, WorldTileInfo rightNeighbor, WorldTileInfo downNeighbor, List<TerrainInfo.TerrainType> sharedTerrainList)
+    public void InitializeTerrain(WorldInfo worldInfo, WorldTileInfo leftNeighbor, WorldTileInfo upNeighbor, WorldTileInfo rightNeighbor, WorldTileInfo downNeighbor, List<TerrainInfo.TerrainType> sharedTerrainList, bool heightDebugTerrain = false)
     {
         this.Terrain = new TerrainInfo[worldInfo.QuadSize, worldInfo.QuadSize];
         for (int x = 0; x < worldInfo.QuadSize; ++x)
@@ -245,6 +245,9 @@ public class WorldTileInfo
 
         createFeatureEntries();
         sharedTerrainList.Clear();
+
+        if (heightDebugTerrain)
+            heightDebugTerrainFill(this.Terrain);
     }
 
     /**
@@ -279,11 +282,14 @@ public class WorldTileInfo
             {
                 for (int y = 0; y < this.Terrain.GetLength(1); ++y)
                 {
-                    float p = Mathf.PerlinNoise(2.0f * x / this.Terrain.GetLength(0), 2.0f * y / this.Terrain.GetLength(1));
-                    float r = 0.05f + p * 0.6f;
-                    if (Random.value < r)
+                    if (this.Terrain[x, y].Type != TerrainInfo.TerrainType.Water && (this.Terrain[x, y].Height == 2))
                     {
-                        addFeature(TerrainFeature.PineTree, x, y);
+                        float p = Mathf.PerlinNoise(2.0f * x / this.Terrain.GetLength(0), 2.0f * y / this.Terrain.GetLength(1));
+                        float r = 0.7f + p * 0.3f;
+                        if (Random.value < r)
+                        {
+                            addFeature(TerrainFeature.PineTree, x, y);
+                        }
                     }
                 }
             }
@@ -331,6 +337,17 @@ public class WorldTileInfo
                 //if (Random.value < 0.33f) Debug.Log("p = " + p);
                 float h = p * (high - low) + low;
                 heightMap[x, y].Height = Mathf.RoundToInt(h);
+            }
+        }
+    }
+
+    private static void heightDebugTerrainFill(TerrainInfo[,] heightMap)
+    {
+        for (int x = 0; x < heightMap.GetLength(0); ++x)
+        {
+            for (int y = 0; y < heightMap.GetLength(1); ++y)
+            {
+                heightMap[x, y].Type = (TerrainInfo.TerrainType)Mathf.Min(heightMap[x, y].Height, 5);
             }
         }
     }

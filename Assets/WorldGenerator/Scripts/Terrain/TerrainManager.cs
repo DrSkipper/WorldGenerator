@@ -24,6 +24,7 @@ public class TerrainManager : MonoBehaviour
     public List<GameObject> IgnoreRecenter;
 
     public PooledObject PineTreePrefab;
+    public bool DebugTerrainHeight = false;
 
     void Start()
     {
@@ -198,7 +199,7 @@ public class TerrainManager : MonoBehaviour
         WorldTileInfo downLeftNeighbor = _world[leftX, downY];
 
         if (!me.TerrainInitialized)
-            me.InitializeTerrain(this.WorldInfo, leftNeighbor, upNeighbor, rightNeighbor, downNeighbor, _sharedTerrainList);
+            me.InitializeTerrain(this.WorldInfo, leftNeighbor, upNeighbor, rightNeighbor, downNeighbor, _sharedTerrainList, this.DebugTerrainHeight);
 
         guaranteeTerrainInitialization(leftNeighbor, leftX, _center.Y);
         guaranteeTerrainInitialization(upNeighbor, _center.X, upY);
@@ -244,7 +245,7 @@ public class TerrainManager : MonoBehaviour
         {
             WorldTileInfo leftNeighbor, upNeighbor, rightNeighbor, downNeighbor;
             gatherNeighborReferences(x, y, out leftNeighbor, out upNeighbor, out rightNeighbor, out downNeighbor);
-            tile.InitializeTerrain(this.WorldInfo, leftNeighbor, upNeighbor, rightNeighbor, downNeighbor, _sharedTerrainList);
+            tile.InitializeTerrain(this.WorldInfo, leftNeighbor, upNeighbor, rightNeighbor, downNeighbor, _sharedTerrainList, this.DebugTerrainHeight);
         }
     }
 
@@ -269,7 +270,7 @@ public class TerrainManager : MonoBehaviour
 
             if (feature != null)
             {
-                feature.transform.SetPosition(quad.transform.position.x + (entry.TilePosition.X - this.WorldInfo.QuadSize / 2) * quad.TileRenderSize + quad.TileRenderSize / 2, tile.Terrain[entry.TilePosition.X, entry.TilePosition.Y].Height * quad.TileRenderSize, quad.transform.position.y + (entry.TilePosition.Y - this.WorldInfo.QuadSize / 2) * quad.TileRenderSize + quad.TileRenderSize / 2);
+                feature.transform.SetPosition(quad.transform.position.x + (entry.TilePosition.X - this.WorldInfo.QuadSize / 2) * quad.TileRenderSize + quad.TileRenderSize / 2, quad.transform.position.y +  tile.Terrain[entry.TilePosition.X, entry.TilePosition.Y].Height * quad.TileRenderSize, quad.transform.position.z + (entry.TilePosition.Y - this.WorldInfo.QuadSize / 2) * quad.TileRenderSize + quad.TileRenderSize / 2);
                 _loadedFeatures.Add(feature);
             }
         }
