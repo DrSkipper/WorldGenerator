@@ -27,6 +27,8 @@ public class TerrainManager : MonoBehaviour
     public bool DebugTerrainHeight = false;
     public EntityTracker EntityTracker;
 
+    public IntegerVector CurrentCenter { get { return _center; } }
+
     void Start()
     {
         _halfQuadSize = this.WorldInfo.QuadSize * this.MainQuad.TileRenderSize / 2;
