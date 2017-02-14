@@ -25,6 +25,7 @@ public class TerrainManager : MonoBehaviour
 
     public PooledObject PineTreePrefab;
     public bool DebugTerrainHeight = false;
+    public EntityTracker EntityTracker;
 
     void Start()
     {
@@ -258,6 +259,9 @@ public class TerrainManager : MonoBehaviour
         for (int i = 0; i < tile.NumFeatures; ++i)
         {
             WorldTileInfo.FeatureEntry entry = tile.GetFeature(i);
+            if (!EntityTracker.GetEntity(tile.Name, entry.Id).CanLoad)
+                continue;
+
             PooledObject feature = null;
             switch (entry.FeatureType)
             {
@@ -270,6 +274,11 @@ public class TerrainManager : MonoBehaviour
 
             if (feature != null)
             {
+                WorldEntity entity = feature.GetComponent<WorldEntity>();
+                entity.QuadName = tile.Name;
+                entity.EntityName = entry.Id;
+                this.EntityTracker.TrackLoadedEntity(entity);
+
                 feature.transform.SetPosition(quad.transform.position.x + (entry.TilePosition.X - this.WorldInfo.QuadSize / 2) * quad.TileRenderSize + quad.TileRenderSize / 2, quad.transform.position.y +  tile.Terrain[entry.TilePosition.X, entry.TilePosition.Y].Height * quad.TileRenderSize, quad.transform.position.z + (entry.TilePosition.Y - this.WorldInfo.QuadSize / 2) * quad.TileRenderSize + quad.TileRenderSize / 2);
                 _loadedFeatures.Add(feature);
             }
@@ -311,7 +320,7 @@ public class TerrainManager : MonoBehaviour
         {
             for (int y = 0; y < specs.MapSize.Y; ++y)
             {
-                _world[x, y] = new WorldTileInfo(genTileToWorldTileType(layers[0].Grid[x, y]));
+                _world[x, y] = new WorldTileInfo(genTileToWorldTileType(layers[0].Grid[x, y]), x, y);
 
                 for (int i = 1; i < layers.Count; ++i)
                 {

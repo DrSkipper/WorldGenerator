@@ -45,7 +45,7 @@ public class WorldTileInfo
 
     public struct FeatureEntry
     {
-        //TODO: Id for entry, to make sure don't respawn if destroyed
+        public string Id;
         public TerrainFeature FeatureType;
         public IntegerVector TilePosition;
     }
@@ -56,9 +56,11 @@ public class WorldTileInfo
     public bool TerrainInitialized { get { return this.Terrain != null; } }
     public int NumFeatures { get { return this.Features == null ? 0 : this.Features.Count; } }
 
-    public WorldTileInfo(TileType tileType)
+    public WorldTileInfo(TileType tileType, int x, int y)
     {
+        this.WorldPos = new IntegerVector(x, y);
         this.SetTileType(tileType);
+        this.Name = "Q:" + x + "," + y;
     }
 
     public TileTrait GetTileTrait(int index)
@@ -253,10 +255,12 @@ public class WorldTileInfo
     /**
      * Data
      */
+    public IntegerVector WorldPos;
     public int Type;
     public List<int> Traits;
     public TerrainInfo[,] Terrain;
     public List<FeatureEntry> Features;
+    public string Name;
 
     /**
      * Private
@@ -271,6 +275,7 @@ public class WorldTileInfo
         FeatureEntry entry = new FeatureEntry();
         entry.FeatureType = featureType;
         entry.TilePosition = new IntegerVector(x, y);
+        entry.Id = "q" + this.WorldPos.X + "," + this.WorldPos.Y + "_p" + x + "," + y + "_t" + (int)featureType;
         this.Features.Add(entry);
     }
 
