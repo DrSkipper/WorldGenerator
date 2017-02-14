@@ -61,11 +61,15 @@ public class EntityTracker : MonoBehaviour
         for (int i = 0; i < _loadedEntities.Count;)
         {
             WorldEntity entity = _loadedEntities[i];
-            IntegerVector entityPos = (Vector2)entity.transform.position;
+            IntegerVector entityPos = new Vector2(entity.transform.position.x, entity.transform.position.z);
 
             if (!loadBounds.Contains(entityPos))
             {
-                _trackedEntities[entity.QuadName][entity.EntityName].Loaded = false;
+                Entity tracker = _trackedEntities[entity.QuadName][entity.EntityName];
+                if (tracker.StillInInitialState)
+                    _trackedEntities[entity.QuadName].Remove(entity.EntityName);
+                else
+                    tracker.Loaded = false;
                 ObjectPools.Release(entity.gameObject);
                 _loadedEntities.RemoveAt(i);
             }

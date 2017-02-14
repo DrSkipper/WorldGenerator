@@ -33,6 +33,7 @@ public class TerrainManager : MonoBehaviour
         _recenterObjects = new List<GameObject>();
         _sharedTerrainList = new List<WorldTileInfo.TerrainInfo.TerrainType>();
         _loadedFeatures = new List<PooledObject>();
+        _loadBounds = new IntegerRect(0, 0, _halfQuadSize * 6, _halfQuadSize * 6);
         this.WorldGenManager.AddUpdateDelegate(onWorldGenUpdate);
     }
 
@@ -65,6 +66,7 @@ public class TerrainManager : MonoBehaviour
     private IntegerVector _center;
     private List<WorldTileInfo.TerrainInfo.TerrainType> _sharedTerrainList;
     private List<PooledObject> _loadedFeatures;
+    private IntegerRect _loadBounds;
 
     private enum LoadSection
     {
@@ -95,6 +97,7 @@ public class TerrainManager : MonoBehaviour
         assingQuadPositions(); // Move left quads into correct position
         recenter(_halfQuadSize * 2, 0); // Recenter all actors and other objects
         loadWorld(LoadSection.Left); // Load new data for left quads
+        this.EntityTracker.QuadsUnloaded(_loadBounds);
     }
 
     private void centerRightQuad()
@@ -117,6 +120,7 @@ public class TerrainManager : MonoBehaviour
         assingQuadPositions(); // Move left quads into correct position
         recenter(-_halfQuadSize * 2, 0); // Recenter all actors and other objects
         loadWorld(LoadSection.Right); // Load new data for left quads
+        this.EntityTracker.QuadsUnloaded(_loadBounds);
     }
 
     private void centerDownQuad()
@@ -139,6 +143,7 @@ public class TerrainManager : MonoBehaviour
         assingQuadPositions(); // Move left quads into correct position
         recenter(0, _halfQuadSize * 2); // Recenter all actors and other objects
         loadWorld(LoadSection.Down); // Load new data for left quads
+        this.EntityTracker.QuadsUnloaded(_loadBounds);
     }
 
     private void centerUpQuad()
@@ -161,6 +166,7 @@ public class TerrainManager : MonoBehaviour
         assingQuadPositions(); // Move left quads into correct position
         recenter(0, -_halfQuadSize * 2); // Recenter all actors and other objects
         loadWorld(LoadSection.Up); // Load new data for left quads
+        this.EntityTracker.QuadsUnloaded(_loadBounds);
     }
 
     private void recenter(float offsetX, float offsetZ)
