@@ -34,7 +34,7 @@ public class TerrainManager : MonoBehaviour
         _halfQuadSize = this.WorldInfo.QuadSize * this.MainQuad.TileRenderSize / 2;
         _recenterObjects = new List<GameObject>();
         _sharedTerrainList = new List<WorldTileInfo.TerrainInfo.TerrainType>();
-        _loadedFeatures = new List<PooledObject>();
+        //_loadedFeatures = new List<PooledObject>();
         _loadBounds = new IntegerRect(0, 0, _halfQuadSize * 6, _halfQuadSize * 6);
         this.WorldGenManager.AddUpdateDelegate(onWorldGenUpdate);
     }
@@ -67,7 +67,7 @@ public class TerrainManager : MonoBehaviour
     private List<GameObject> _recenterObjects;
     private IntegerVector _center;
     private List<WorldTileInfo.TerrainInfo.TerrainType> _sharedTerrainList;
-    private List<PooledObject> _loadedFeatures;
+    //private List<PooledObject> _loadedFeatures;
     private IntegerRect _loadBounds;
 
     private enum LoadSection
@@ -288,7 +288,7 @@ public class TerrainManager : MonoBehaviour
                 this.EntityTracker.TrackLoadedEntity(entity);
 
                 feature.transform.SetPosition(quad.transform.position.x + (entry.TilePosition.X - this.WorldInfo.QuadSize / 2) * quad.TileRenderSize + quad.TileRenderSize / 2, quad.transform.position.y +  tile.Terrain[entry.TilePosition.X, entry.TilePosition.Y].Height * quad.TileRenderSize, quad.transform.position.z + (entry.TilePosition.Y - this.WorldInfo.QuadSize / 2) * quad.TileRenderSize + quad.TileRenderSize / 2);
-                _loadedFeatures.Add(feature);
+                //_loadedFeatures.Add(feature);
             }
         }
     }
